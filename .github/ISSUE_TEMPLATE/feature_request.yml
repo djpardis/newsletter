@@ -20,12 +20,3 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
-  - type: checkboxes
-    id: scope
-    attributes:
-      label: Scope check
-      description: This project intentionally stays small and dependency-light.
-      options:
-        - label: This change keeps the Worker on the standard runtime (no new heavy runtime deps).
-        - label: It does not break the existing HTTP API or `Env` variable names.
-        - label: Any schema change is forward-only (new migration file, no edits to applied ones).
