@@ -22,6 +22,11 @@ export interface Env {
    * link here instead of the Worker hostname. Falls back to `BASE_URL`.
    */
   SITE_URL?: string;
+  /**
+   * Short tagline shown after the sender signature in emails (e.g. "Boring on purpose.").
+   * Optional — omitted from footer when unset.
+   */
+  SITE_TAGLINE?: string;
 }
 
 export type SubscriberStatus =

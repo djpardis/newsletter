@@ -37,14 +37,31 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** HTML signature block: — Brand\nTagline (if set). */
+function signatureBlock(env: Env): string {
+  const brand = escapeHtml(brandName(env));
+  const tag = env.SITE_TAGLINE ?? "";
+  const tagLine = tag ? `<br/>${escapeHtml(tag)}` : "";
+  return `<p>— ${brand}${tagLine}</p>`;
+}
+
+/** Plain-text signature: — Brand\nTagline (if set). */
+function signatureText(env: Env): string {
+  const brand = brandName(env);
+  const tag = env.SITE_TAGLINE ?? "";
+  return tag ? `\n\n— ${brand}\n${tag}` : `\n\n— ${brand}`;
+}
+
 export function footerBlock(env: Env, unsubscribeUrl: string): string {
   const host = siteHost(env);
+  const site = siteUrl(env);
   const addressLine = hasAddress(env)
     ? `<br/>\n    ${escapeHtml(env.COMPANY_ADDRESS as string)}`
     : "";
   return `
+  ${signatureBlock(env)}
   <p style="margin-top:24px;font-size:12px;color:#666;">
-    You received this because you signed up at ${escapeHtml(host)}.<br/>
+    You received this because you signed up at <a href="${site}">${escapeHtml(host)}</a>.<br/>
     <a href="${unsubscribeUrl}">Unsubscribe</a>${addressLine}
   </p>`;
 }
@@ -52,7 +69,7 @@ export function footerBlock(env: Env, unsubscribeUrl: string): string {
 export function footerText(env: Env, unsubscribeUrl: string): string {
   const host = siteHost(env);
   const addressLine = hasAddress(env) ? `\n${env.COMPANY_ADDRESS}` : "";
-  return `\n\n---\nYou received this because you signed up at ${host}.\nUnsubscribe: ${unsubscribeUrl}${addressLine}`;
+  return `${signatureText(env)}\n\n---\nYou received this because you signed up at ${host}.\nUnsubscribe: ${unsubscribeUrl}${addressLine}`;
 }
 
 export function confirmEmail(
@@ -66,12 +83,14 @@ export function confirmEmail(
   const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">
   <p>Thanks for signing up to <a href="${site}">${escapeHtml(brand)}</a>.</p>
   <p><a href="${confirmUrl}">Confirm</a> your email.</p>
+  <p>More soon.</p>
+  ${signatureBlock(env)}
   <p style="margin-top:24px;font-size:12px;color:#666;">
-    You received this because you signed up at ${escapeHtml(host)}.<br/>
+    You received this because you signed up at <a href="${site}">${escapeHtml(host)}</a>.<br/>
     If you did not request this, ignore this message.
   </p>
   </body></html>`;
-  const text = `Thanks for signing up to ${brand} (${site}).\n\nConfirm your email: ${confirmUrl}\n\n---\nYou received this because you signed up at ${host}.\nIf you did not request this, ignore this message.`;
+  const text = `Thanks for signing up to ${brand} (${site}).\n\nConfirm your email: ${confirmUrl}\n\nMore soon.${signatureText(env)}\n\n---\nYou received this because you signed up at ${host}.\nIf you did not request this, ignore this message.`;
   return { subject, html, text };
 }
 
@@ -89,11 +108,15 @@ function okPageShell(title: string, heading: string, body: string, env: Env): st
 }
 
 export function confirmOkPage(env: Env): string {
-  return okPageShell("Confirmed!", "Confirmed!", `Thank you for subscribing to ${escapeHtml(brandName(env))}.`, env);
+  const site = siteUrl(env);
+  const name = escapeHtml(brandName(env));
+  return okPageShell("Confirmed!", "Confirmed!", `Thank you for subscribing to <a href="${site}">${name}</a>.`, env);
 }
 
 export function unsubscribedPage(env: Env): string {
-  return okPageShell("Unsubscribed", "You're unsubscribed", "You won't receive any further emails.", env);
+  const site = siteUrl(env);
+  const name = escapeHtml(brandName(env));
+  return okPageShell("Unsubscribed!", "You're unsubscribed!", `You won't receive any further emails from <a href="${site}">${name}</a>.`, env);
 }
 
 export function campaignEmail(

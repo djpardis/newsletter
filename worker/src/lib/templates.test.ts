@@ -61,13 +61,11 @@ describe("confirmEmail", () => {
     expect(text).toContain("Confirm your email: https://newsletter.example.com/api/confirm?token=t");
   });
 
-  it("does not include a postal address or footer site link", () => {
+  it("does not include a postal address", () => {
     const env = baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" });
     const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
     expect(html).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
     expect(text).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
-    expect(html).not.toContain("font-size:12px");
-    expect(html).not.toContain("color:#666");
   });
 
   it("escapes HTML in SITE_NAME", () => {
@@ -78,10 +76,16 @@ describe("confirmEmail", () => {
     expect(html).toContain("&amp; Co.");
   });
 
-  it("includes a short text divider between the body and the disclaimer", () => {
-    const { html, text } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
-    expect(html).toContain("<p>----</p>");
+  it("includes signature and footer with signup origin", () => {
+    const env = baseEnv({ SITE_NAME: "Vance Refrigeration", SITE_TAGLINE: "Refrigeration you can count on." });
+    const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
+    expect(html).toContain("More soon.");
+    expect(html).toContain("— Vance Refrigeration");
+    expect(html).toContain("Refrigeration you can count on.");
+    expect(html).toContain("You received this because you signed up at");
     expect(html).not.toContain("<hr");
+    expect(text).toContain("More soon.");
+    expect(text).toContain("— Vance Refrigeration");
     expect(text).toContain("---");
   });
 });
@@ -91,20 +95,30 @@ describe("footerBlock / footerText", () => {
     const env = baseEnv({ SITE_URL: "https://example.com" });
     const block = footerBlock(env, "https://x/unsub?t=1");
     const text = footerText(env, "https://x/unsub?t=1");
-    expect(block).toContain("you signed up at example.com");
+    expect(block).toContain(">example.com<");
     expect(text).toContain("you signed up at example.com");
   });
 
   it("falls back to BASE_URL hostname when SITE_URL is unset", () => {
     const env = baseEnv();
     const block = footerBlock(env, "https://x/unsub?t=1");
-    expect(block).toContain("you signed up at newsletter.example.com");
+    expect(block).toContain(">newsletter.example.com<");
+  });
+
+  it("includes tagline in signature when SITE_TAGLINE is set", () => {
+    const env = baseEnv({ SITE_NAME: "Vance Refrigeration", SITE_TAGLINE: "Refrigeration you can count on." });
+    const block = footerBlock(env, "https://x/unsub?t=1");
+    const text = footerText(env, "https://x/unsub?t=1");
+    expect(block).toContain("— Vance Refrigeration");
+    expect(block).toContain("Refrigeration you can count on.");
+    expect(text).toContain("— Vance Refrigeration");
+    expect(text).toContain("Refrigeration you can count on.");
   });
 
   it("omits postal line and trailing <br/> when address is empty", () => {
     const block = footerBlock(baseEnv({ COMPANY_ADDRESS: "" }), "https://x/unsub?t=1");
     expect(block).not.toContain("[Add postal address");
-    expect(block).not.toMatch(/<br\/>\s*<\/p>/); // no dangling <br/> before </p>
+    expect(block).not.toMatch(/<br\/>\s*<\/p>/);
   });
 
   it("includes postal line when address is set", () => {
