@@ -2,6 +2,7 @@ node_modules/
 .wrangler/
 dist/
 *.local.sql
+*.local.md
 .env
 .env.*
 !.env.example
