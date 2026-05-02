@@ -6,7 +6,24 @@ import { sendEmail } from "../lib/resend.js";
 import { baseUrl, campaignEmail } from "../lib/templates.js";
 import { parseJsonBody } from "../lib/validation.js";
 
-const CHUNK = 12;
+const CHUNK = 4; // stay safely under Resend's 5 req/sec limit
+const CHUNK_DELAY_MS = 1100; // ~1 second between chunks
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function normalizeEmail(email: string): string {
+  const lower = email.toLowerCase().trim();
+  const [local, domain] = lower.split("@");
+  if (!local || !domain) return lower;
+  // Strip Gmail-style plus aliases and dots so +alias addresses don't get duplicate sends
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    const canonical = local.split("+")[0].replace(/\./g, "");
+    return `${canonical}@${domain}`;
+  }
+  return lower;
+}
 
 function isKind(k: string): k is CampaignKind {
   return k === "new_post" || k === "new_show" || k === "manual";
@@ -73,7 +90,14 @@ export async function handleCampaignSend(
     unsubscribe_token: string;
   }>();
 
-  const rows = subs.results ?? [];
+  // Deduplicate by canonical email so Gmail +alias addresses don't get multiple copies
+  const seen = new Set<string>();
+  const rows = (subs.results ?? []).filter((sub) => {
+    const key = normalizeEmail(sub.email);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   let sent = 0;
   let failed = 0;
 
@@ -116,6 +140,8 @@ export async function handleCampaignSend(
   for (let i = 0; i < rows.length; i += CHUNK) {
     const part = rows.slice(i, i + CHUNK);
     await Promise.all(part.map((s) => sendOne(s)));
+    // Pause between chunks to stay under Resend's 5 req/sec rate limit
+    if (i + CHUNK < rows.length) await sleep(CHUNK_DELAY_MS);
   }
 
   await env.DB.prepare(`UPDATE campaigns SET sent_at = ? WHERE id = ? AND sent_at IS NULL`)
