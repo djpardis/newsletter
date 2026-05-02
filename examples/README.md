@@ -2,6 +2,19 @@
 
 Reference snippets for wiring a website to the Worker's `POST /api/subscribe` endpoint. They are intentionally framework-free; adapt to React/Vue/Svelte/etc. as needed.
 
+## Request shape
+
+`POST /api/subscribe` with `Content-Type: application/json`:
+
+```json
+{
+  "email": "user@example.com",
+  "source": "website"
+}
+```
+
+Optional fields: `metadata` (object), `turnstile_token` (string, required if `TURNSTILE_SECRET_KEY` is set).
+
 | File | What it shows |
 |------|---------------|
 | `signup-form.html` | Drop-in HTML/CSS/JS form. Sends JSON to the API, handles all documented error states, includes a honeypot, and (optionally) a Cloudflare Turnstile widget. |
