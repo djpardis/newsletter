@@ -2,7 +2,7 @@
 
 Cloudflare Worker API for double opt-in subscriptions, list unsubscribe, and campaign delivery via Resend. Data lives in D1.
 
-A self-hosted alternative to MailerLite/Substack/Buttondown. Free on Cloudflare and Resend free tiers (3,000 emails/month, 100/day cap); Resend Pro is $20/mo for 50,000 emails above that.
+A self-hosted alternative to MailerLite/Substack/Buttondown.
 
 [![CI](https://github.com/djpardis/newsletter/actions/workflows/ci.yml/badge.svg)](https://github.com/djpardis/newsletter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
