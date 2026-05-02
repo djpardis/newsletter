@@ -50,7 +50,7 @@ export async function handleConfirm(
   ]);
 
   await audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now);
-  return new Response(confirmOkPage(), {
+  return new Response(confirmOkPage(env), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
