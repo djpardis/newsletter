@@ -40,10 +40,10 @@ describe("siteUrl / baseUrl", () => {
 
 describe("confirmEmail", () => {
   it("links the brand name to SITE_URL when SITE_URL is set", () => {
-    const env = baseEnv({ SITE_URL: "https://example.com", SITE_NAME: "Acme" });
+    const env = baseEnv({ SITE_URL: "https://example.com", SITE_NAME: "Vance Refrigeration" });
     const { html, text } = confirmEmail(env, "https://newsletter.example.com/api/confirm?token=x");
-    expect(html).toContain('href="https://example.com">Acme</a>');
-    expect(text).toContain("Acme (https://example.com)");
+    expect(html).toContain('href="https://example.com">Vance Refrigeration</a>');
+    expect(text).toContain("Vance Refrigeration (https://example.com)");
   });
 
   it("falls back to BASE_URL when SITE_URL is unset", () => {
@@ -54,7 +54,7 @@ describe("confirmEmail", () => {
 
   it("renders only the word 'Confirm' as the link to confirmUrl", () => {
     const { html, text } = confirmEmail(
-      baseEnv({ SITE_NAME: "Acme" }),
+      baseEnv({ SITE_NAME: "Vance Refrigeration" }),
       "https://newsletter.example.com/api/confirm?token=t",
     );
     expect(html).toContain('<a href="https://newsletter.example.com/api/confirm?token=t">Confirm</a> your email.');
@@ -62,10 +62,10 @@ describe("confirmEmail", () => {
   });
 
   it("does not include a postal address or footer site link", () => {
-    const env = baseEnv({ COMPANY_ADDRESS: "ACME, 1 Main St" });
+    const env = baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" });
     const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
-    expect(html).not.toContain("ACME, 1 Main St");
-    expect(text).not.toContain("ACME, 1 Main St");
+    expect(html).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
+    expect(text).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
     expect(html).not.toContain("font-size:12px");
     expect(html).not.toContain("color:#666");
   });
@@ -109,9 +109,9 @@ describe("footerBlock / footerText", () => {
 
   it("includes postal line when address is set", () => {
     const block = footerBlock(
-      baseEnv({ COMPANY_ADDRESS: "ACME, 1 Main St" }),
+      baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" }),
       "https://x/unsub?t=1",
     );
-    expect(block).toContain("ACME, 1 Main St");
+    expect(block).toContain("Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA");
   });
 });
