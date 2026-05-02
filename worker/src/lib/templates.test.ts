@@ -61,13 +61,11 @@ describe("confirmEmail", () => {
     expect(text).toContain("Confirm your email: https://newsletter.example.com/api/confirm?token=t");
   });
 
-  it("does not include a postal address or footer site link", () => {
+  it("does not include a postal address", () => {
     const env = baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" });
     const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
     expect(html).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
     expect(text).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
-    expect(html).not.toContain("font-size:12px");
-    expect(html).not.toContain("color:#666");
   });
 
   it("escapes HTML in SITE_NAME", () => {
@@ -78,9 +76,10 @@ describe("confirmEmail", () => {
     expect(html).toContain("&amp; Co.");
   });
 
-  it("includes a short text divider between the body and the disclaimer", () => {
+  it("includes a footer with signup origin", () => {
     const { html, text } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
-    expect(html).toContain("<p>----</p>");
+    expect(html).toContain("You received this because you signed up at");
+    expect(html).not.toContain("<p>----</p>");
     expect(html).not.toContain("<hr");
     expect(text).toContain("---");
   });
