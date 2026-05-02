@@ -40,7 +40,7 @@ export async function handleUnsubscribe(
     .first<{ id: string; email: string }>();
 
   if (!row) {
-    return new Response(unsubscribedPage(), {
+    return new Response(unsubscribedPage(env), {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8" },
     });
@@ -53,7 +53,7 @@ export async function handleUnsubscribe(
     .run();
   await audit(env.DB, "subscriber_unsubscribed", row.id, { email: row.email }, now);
 
-  return new Response(unsubscribedPage(), {
+  return new Response(unsubscribedPage(env), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
