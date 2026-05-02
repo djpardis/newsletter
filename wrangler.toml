@@ -1,0 +1,18 @@
+name = "newsletter"
+main = "worker/src/index.ts"
+compatibility_date = "2025-05-01"
+
+[triggers]
+crons = ["17 3 * * *"]
+
+[vars]
+# FROM_EMAIL = "Newsletter <hello@yourdomain.com>"
+# BASE_URL = "https://newsletter-worker.yourdomain.com"
+# SITE_NAME = "Our Newsletter"
+# CORS_ORIGIN = "https://your-public-site.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "newsletter"
+database_id = "REPLACE_ME_AFTER_wrangler_d1_create"
+migrations_dir = "migrations"
