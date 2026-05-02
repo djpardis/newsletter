@@ -51,7 +51,7 @@ npm run dev
 | `SITE_URL` | var (optional) | Public website URL (no trailing slash). When set, `GET /` redirects here and email footers link here. Falls back to `BASE_URL`. |
 | `CORS_ORIGIN` | var (optional) | Allowed browser `Origin` for `/api/subscribe` |
 | `SITE_NAME` | var (optional) | Shown in confirmation subject; default “Newsletter” |
-| `COMPANY_ADDRESS` | var (optional) | Postal line in footers. When unset/empty, the line is omitted. |
+| `COMPANY_ADDRESS` | var (optional) | Postal line in campaign email footers. Not included in transactional emails. When unset/empty, the line is omitted. |
 | `UNSUBSCRIBE_MAILTO` | var (optional) | Extra `List-Unsubscribe` mailto |
 
 ```bash
