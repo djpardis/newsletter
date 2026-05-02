@@ -1,0 +1,57 @@
+name: Bug report
+description: Report unexpected behavior in the Worker, scripts, or migrations.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please do not include real subscriber emails or secrets in this issue. Redact before posting.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One or two sentences describing what is wrong.
+      placeholder: "POST /api/subscribe returns 500 when ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal reproduction. Include the exact request, sample payload (with placeholder values), and what you observed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit / version
+      description: Output of `git rev-parse --short HEAD` or release tag.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      multiple: true
+      options:
+        - Worker route (/api/*)
+        - Email template / deliverability
+        - Migration / D1 schema
+        - Scripts (import/export/campaign)
+        - CI / deploy workflow
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Worker tail output, Wrangler errors, or stack traces. Redact secrets and PII.
+      render: text
