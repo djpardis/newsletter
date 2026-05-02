@@ -39,46 +39,50 @@ describe("siteUrl / baseUrl", () => {
 });
 
 describe("confirmEmail", () => {
-  it("links to SITE_URL host in the HTML footer when SITE_URL is set", () => {
-    const env = baseEnv({ SITE_URL: "https://example.com" });
+  it("links the brand name to SITE_URL when SITE_URL is set", () => {
+    const env = baseEnv({ SITE_URL: "https://example.com", SITE_NAME: "Acme" });
     const { html, text } = confirmEmail(env, "https://newsletter.example.com/api/confirm?token=x");
-    expect(html).toContain('href="https://example.com"');
-    expect(html).not.toContain('href="https://newsletter.example.com"');
-    expect(text).toContain("https://example.com");
+    expect(html).toContain('href="https://example.com">Acme</a>');
+    expect(text).toContain("Acme (https://example.com)");
   });
 
-  it("falls back to BASE_URL in the footer when SITE_URL is unset", () => {
+  it("falls back to BASE_URL when SITE_URL is unset", () => {
     const env = baseEnv();
     const { html } = confirmEmail(env, "https://newsletter.example.com/api/confirm?token=x");
-    expect(html).toContain('href="https://newsletter.example.com"');
+    expect(html).toContain('href="https://newsletter.example.com">');
   });
 
-  it("omits the postal address line when COMPANY_ADDRESS is unset", () => {
-    const { html, text } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
-    expect(html).not.toContain("[Add postal address");
-    expect(html).not.toContain("COMPANY_ADDRESS");
-    expect(text).not.toContain("[Add postal address");
+  it("renders only the word 'Confirm' as the link to confirmUrl", () => {
+    const { html, text } = confirmEmail(
+      baseEnv({ SITE_NAME: "Acme" }),
+      "https://newsletter.example.com/api/confirm?token=t",
+    );
+    expect(html).toContain('<a href="https://newsletter.example.com/api/confirm?token=t">Confirm</a> your email.');
+    expect(text).toContain("Confirm your email: https://newsletter.example.com/api/confirm?token=t");
   });
 
-  it("omits the postal address line when COMPANY_ADDRESS is empty string", () => {
-    const env = baseEnv({ COMPANY_ADDRESS: "" });
-    const { html } = confirmEmail(env, "https://x/confirm?token=t");
-    expect(html).not.toMatch(/<br\/>\s*<a/); // no stray <br/> immediately before the link
-  });
-
-  it("includes the postal address line when COMPANY_ADDRESS is set", () => {
-    const env = baseEnv({ COMPANY_ADDRESS: "ACME, 1 Main St, Townsville" });
+  it("does not include a postal address or footer site link", () => {
+    const env = baseEnv({ COMPANY_ADDRESS: "ACME, 1 Main St" });
     const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
-    expect(html).toContain("ACME, 1 Main St, Townsville");
-    expect(text).toContain("ACME, 1 Main St, Townsville");
+    expect(html).not.toContain("ACME, 1 Main St");
+    expect(text).not.toContain("ACME, 1 Main St");
+    expect(html).not.toContain("font-size:12px");
+    expect(html).not.toContain("color:#666");
   });
 
-  it("escapes HTML in COMPANY_ADDRESS", () => {
-    const env = baseEnv({ COMPANY_ADDRESS: "<script>x</script> & Co." });
+  it("escapes HTML in SITE_NAME", () => {
+    const env = baseEnv({ SITE_NAME: "<script>x</script> & Co." });
     const { html } = confirmEmail(env, "https://x/confirm?token=t");
     expect(html).not.toContain("<script>x</script>");
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("&amp; Co.");
+  });
+
+  it("includes a short text divider between the body and the disclaimer", () => {
+    const { html, text } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
+    expect(html).toContain("<p>----</p>");
+    expect(html).not.toContain("<hr");
+    expect(text).toContain("---");
   });
 });
 
