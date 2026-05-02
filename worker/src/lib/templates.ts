@@ -59,19 +59,14 @@ export function confirmEmail(
   env: Env,
   confirmUrl: string,
 ): { subject: string; html: string; text: string } {
-  const subject = `Confirm your subscription to ${brandName(env)}`;
+  const brand = brandName(env);
   const site = siteUrl(env);
-  const addressLineHtml = hasAddress(env)
-    ? `${escapeHtml(env.COMPANY_ADDRESS as string)}<br/>`
-    : "";
-  const addressLineText = hasAddress(env) ? `\n${env.COMPANY_ADDRESS}` : "";
-  const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">
-  <p>Thanks for signing up.</p>
-  <p><a href="${confirmUrl}">Confirm your email</a></p>
-  <p>If you did not request this, ignore this message.</p>
-  <p style="margin-top:24px;font-size:12px;color:#666;">${addressLineHtml}<a href="${site}">${escapeHtml(site)}</a></p>
-  </body></html>`;
-  const text = `Thanks for signing up.\nConfirm your email: ${confirmUrl}\nIf you did not request this, ignore this message.${addressLineText}\n${site}`;
+  const subject = `Confirm your subscription to ${brand}`;
+  const html = `<p>Thanks for signing up to <a href="${site}">${escapeHtml(brand)}</a>.</p>
+<p><a href="${confirmUrl}">Confirm</a> your email.</p>
+<p>----</p>
+<p>If you did not request this, ignore this message.</p>`;
+  const text = `Thanks for signing up to ${brand} (${site}).\n\nConfirm your email: ${confirmUrl}\n\n---\n\nIf you did not request this, ignore this message.`;
   return { subject, html, text };
 }
 
