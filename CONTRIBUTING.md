@@ -16,6 +16,7 @@ npm install
 npm run typecheck
 npm run lint
 npm test
+npm run deploy   # manual deploy; CI uses the deploy workflow
 ```
 
 ## Compatibility expectations
