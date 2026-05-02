@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Newsletter signup</title>
+    <!-- Optional: only needed if Turnstile is enabled on the Worker. -->
+    <!-- <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script> -->
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+        max-width: 28rem;
+        margin: 4rem auto;
+        padding: 0 1rem;
+      }
+      form { display: grid; gap: 0.75rem; }
+      label { font-weight: 600; }
+      input[type="email"] {
+        padding: 0.6rem 0.75rem;
+        font-size: 1rem;
+        border: 1px solid #999;
+        border-radius: 0.4rem;
+      }
+      button {
+        padding: 0.65rem 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 0;
+        border-radius: 0.4rem;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+      }
+      button[disabled] { opacity: 0.6; cursor: progress; }
+      .hp { position: absolute; left: -9999px; opacity: 0; }
+      .msg { font-size: 0.95rem; min-height: 1.4em; }
+      .msg.error { color: #b00020; }
+      .msg.success { color: #006400; }
+    </style>
+  </head>
+  <body>
+    <h1>Subscribe</h1>
+    <p>Get new posts and shows in your inbox. One email per release. Unsubscribe in one click.</p>
+
+    <form id="signup" data-api-url="https://your-worker.example.workers.dev" novalidate>
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+
+      <!-- Honeypot: bots fill this; humans don't see it. -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Website</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <!-- Optional: uncomment and set your Turnstile *site* key (public) if Turnstile is enabled. -->
+      <!-- <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY"></div> -->
+
+      <button type="submit">Subscribe</button>
+      <p id="msg" class="msg" role="status" aria-live="polite"></p>
+    </form>
+
+    <script>
+      (() => {
+        const form = document.getElementById("signup");
+        const msg = document.getElementById("msg");
+        const button = form.querySelector("button");
+        const API_URL = form.dataset.apiUrl;
+
+        function show(kind, text) {
+          msg.className = `msg ${kind}`;
+          msg.textContent = text;
+        }
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          show("", "");
+          button.disabled = true;
+
+          const email = form.email.value.trim();
+          const website = form.website.value;
+          const turnstileToken = form.querySelector(
+            'input[name="cf-turnstile-response"]',
+          )?.value;
+
+          const payload = {
+            email,
+            source: "website",
+            ...(website ? { website } : {}),
+            ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+          };
+
+          try {
+            const res = await fetch(`${API_URL}/api/subscribe`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const body = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+              if (body.state === "active") {
+                show("success", "You're already subscribed. Thanks!");
+              } else {
+                show("success", "Check your inbox to confirm your subscription.");
+              }
+              form.reset();
+              return;
+            }
+            if (res.status === 400 && body.error === "invalid_email") {
+              show("error", "That email looks invalid. Try another?");
+              return;
+            }
+            if (res.status === 400 && body.error === "turnstile_failed") {
+              show("error", "Verification failed. Please try again.");
+              if (window.turnstile) window.turnstile.reset();
+              return;
+            }
+            if (res.status === 429) {
+              const retry = Number(body.retry_after_sec) || 60;
+              show("error", `Too many attempts. Try again in ${retry}s.`);
+              return;
+            }
+            show("error", "Something went wrong. Please try again shortly.");
+          } catch {
+            show("error", "Network error. Please try again.");
+          } finally {
+            button.disabled = false;
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

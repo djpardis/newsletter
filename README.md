@@ -2,6 +2,11 @@
 
 Cloudflare Worker API for double opt-in subscriptions, list unsubscribe, and campaign delivery via Resend. Data lives in D1.
 
+A self-hosted alternative to MailerLite/Substack/Buttondown: you keep the subscriber list in your own D1 database, send through your own Resend account, and own the integration end to end. The Worker is small enough to read in one sitting and ships RFC 8058 one-click unsubscribe, bounce/complaint handling, rate limiting, and a daily cleanup cron. Operating cost is typically a few dollars per month.
+
+[![CI](https://github.com/djpardis/newsletter/actions/workflows/ci.yml/badge.svg)](https://github.com/djpardis/newsletter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ## Requirements
 
 - Node 20+
@@ -142,4 +147,11 @@ GitHub Actions:
 | `worker/src/lib/` | Email, validation, rate limits, signatures, cleanup |
 | `migrations/` | D1 SQL |
 | `scripts/` | CLI tools |
+| `examples/` | Reference signup-form integration |
 | `.github/workflows/` | CI and deploy |
+
+## Contributing & security
+
+- Contributions: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Security disclosures: see [`SECURITY.md`](SECURITY.md). Please do not file public issues for vulnerabilities.
+- License: [MIT](LICENSE).

@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new capability or improvement.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and why is it hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: A sketch of the API, config, or UX. Rough is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      description: This project intentionally stays small and dependency-light.
+      options:
+        - label: This change keeps the Worker on the standard runtime (no new heavy runtime deps).
+        - label: It does not break the existing HTTP API or `Env` variable names.
+        - label: Any schema change is forward-only (new migration file, no edits to applied ones).
