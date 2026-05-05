@@ -44,7 +44,6 @@ async function sendConfirmEmail(
   return sendEmail(env, {
     to: email,
     subject: tpl.subject,
-    html: tpl.html,
     text: tpl.text,
     transactional: true,
   });
