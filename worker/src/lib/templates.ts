@@ -113,9 +113,8 @@ export function confirmOkPage(env: Env): string {
 }
 
 export function unsubscribedPage(env: Env): string {
-  const site = siteUrl(env);
   const name = escapeHtml(brandName(env));
-  return okPageShell("Unsubscribed!", "You're unsubscribed!", `You won't receive any further emails from <a href="${site}">${name}</a>.`, env);
+  return okPageShell("Unsubscribed!", "You're unsubscribed!", `You won't receive any further emails from ${name}.`, env);
 }
 
 export function campaignEmail(
