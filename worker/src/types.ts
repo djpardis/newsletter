@@ -1,3 +1,9 @@
+/** Message enqueued by /api/campaigns/send; processed by the queue consumer. */
+export interface SendMessage {
+  campaign_id: string;
+  subscriber_id: string;
+}
+
 export interface Env {
   DB: D1Database;
   RESEND_API_KEY: string;
@@ -22,6 +28,19 @@ export interface Env {
    * link here instead of the Worker hostname. Falls back to `BASE_URL`.
    */
   SITE_URL?: string;
+  /**
+   * Cloudflare Rate Limiting binding for /api/subscribe.
+   * When present, replaces the D1-backed rate limit table.
+   * Configure via [[ratelimits]] in wrangler.toml.
+   */
+  SUBSCRIBE_RATE_LIMITER?: RateLimit;
+  /**
+   * Cloudflare Queue producer for campaign sends.
+   * When present, /api/campaigns/send enqueues one message per subscriber
+   * and returns immediately; the queue consumer handles delivery.
+   * Configure via [[queues.producers]] in wrangler.toml.
+   */
+  SEND_QUEUE?: Queue<SendMessage>;
 }
 
 export type SubscriberStatus =

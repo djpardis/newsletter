@@ -69,7 +69,7 @@ See `.env.example` for a full checklist.
 | `npx tsx scripts/create-campaign.ts` | Create a campaign row |
 | `npx tsx scripts/send-campaign.ts` | Trigger `POST /api/campaigns/send` |
 
-A daily cron (`wrangler.toml` `[triggers]`) prunes expired tokens, rate-limit rows, and old audit events.
+A daily cron (`wrangler.toml` `[triggers]`) prunes expired tokens and old audit events.
 
 ## Layout
 
