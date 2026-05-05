@@ -140,17 +140,15 @@ describe("confirmation pages", () => {
     SITE_NAME: "Vance Refrigeration",
   });
 
-  it("does not link the top brand label on the subscribe confirmation page", () => {
+  it("does not show a top brand label on the subscribe confirmation page", () => {
     const html = confirmOkPage(env);
-    expect(html).toContain(">Vance Refrigeration</p>");
     expect(html).toContain('Thank you for subscribing to <a href="https://example.com">Vance Refrigeration</a>.');
-    expect(html).not.toContain('<p style="font-size:.85rem;color:#888;margin-bottom:1.5rem"><a');
+    expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
   });
 
-  it("does not link the top brand label on the unsubscribe confirmation page", () => {
+  it("does not show a top brand label on the unsubscribe confirmation page", () => {
     const html = unsubscribedPage(env);
-    expect(html).toContain(">Vance Refrigeration</p>");
     expect(html).toContain('You won\'t receive any further emails from <a href="https://example.com">Vance Refrigeration</a>.');
-    expect(html).not.toContain('<p style="font-size:.85rem;color:#888;margin-bottom:1.5rem"><a');
+    expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
   });
 });
