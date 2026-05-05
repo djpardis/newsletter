@@ -1,4 +1,5 @@
-import type { Env } from "./types.js";
+import type { Env, SendMessage } from "./types.js";
+import { handleSendQueue } from "./routes/queue-consumer.js";
 import { withCors } from "./lib/cors.js";
 import { runCleanup } from "./lib/cleanup.js";
 import { handleAdminDelete } from "./routes/admin.js";
@@ -79,5 +80,9 @@ export default {
         (e) => console.error("cleanup_failed:", e),
       ),
     );
+  },
+
+  async queue(batch: MessageBatch<SendMessage>, env: Env): Promise<void> {
+    await handleSendQueue(batch, env);
   },
 };
