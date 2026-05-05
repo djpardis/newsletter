@@ -62,8 +62,19 @@ export async function handleSendQueue(
       continue;
     }
 
+    // Idempotency: skip if already successfully delivered (e.g. queue redelivery
+    // after a successful Resend call but before the ack reached the broker).
+    const existing = await env.DB.prepare(
+      `SELECT id FROM deliveries
+       WHERE campaign_id = ? AND subscriber_id = ? AND status = 'sent'`,
+    ).bind(campaign_id, subscriber_id).first<{ id: string }>();
+    if (existing) {
+      msg.ack();
+      continue;
+    }
+
     const unsubUrl = `${baseUrl(env)}/api/unsubscribe?token=${encodeURIComponent(sub.unsubscribe_token)}`;
-    const tpl = campaignEmail(env, campaign.subject, campaign.html_body, campaign.text_body, unsubUrl);
+    const tpl = campaignEmail(env, campaign.html_body, campaign.text_body, unsubUrl);
 
     const result = await sendEmail(env, {
       to: sub.email,

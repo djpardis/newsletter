@@ -92,7 +92,6 @@ export function unsubscribedPage(env: Env): string {
 
 export function campaignEmail(
   env: Env,
-  _subject: string,
   htmlBody: string,
   textBody: string,
   unsubscribeUrl: string,
