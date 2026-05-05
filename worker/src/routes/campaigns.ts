@@ -82,9 +82,17 @@ export async function handleCampaignSend(
 
   if (!campaign) return Response.json({ error: "campaign_not_found" }, { status: 404 });
 
+  // Skip subscribers who already have a delivery row for this campaign so the
+  // handler is safe to re-run after a partial failure without double-sending.
   const subs = await env.DB.prepare(
-    `SELECT id, email, unsubscribe_token FROM subscribers WHERE status = 'active' AND unsubscribe_token IS NOT NULL`,
-  ).all<{
+    `SELECT s.id, s.email, s.unsubscribe_token
+     FROM subscribers s
+     LEFT JOIN deliveries d ON d.subscriber_id = s.id AND d.campaign_id = ?
+     WHERE s.status = 'active'
+       AND s.unsubscribe_token IS NOT NULL
+       AND d.id IS NULL
+     ORDER BY s.id`,
+  ).bind(campaignId).all<{
     id: string;
     email: string;
     unsubscribe_token: string;
@@ -98,18 +106,34 @@ export async function handleCampaignSend(
     seen.add(key);
     return true;
   });
+  // --- Queue path (production) ---
+  // Enqueue one message per subscriber and return immediately.
+  // The queue consumer handles delivery and writes delivery rows.
+  if (env.SEND_QUEUE) {
+    await env.SEND_QUEUE.sendBatch(
+      rows.map((sub) => ({ body: { campaign_id: campaign.id, subscriber_id: sub.id } })),
+    );
+
+    await env.DB.prepare(`UPDATE campaigns SET sent_at = ? WHERE id = ? AND sent_at IS NULL`)
+      .bind(now, campaign.id)
+      .run();
+
+    await audit(env.DB, "campaign_enqueued", null, { campaign_id: campaign.id, queued: rows.length }, now);
+
+    return Response.json({
+      ok: true,
+      campaign_id: campaign.id,
+      queued: rows.length,
+    });
+  }
+
+  // --- Inline path (local dev fallback, no queue binding configured) ---
   let sent = 0;
   let failed = 0;
 
   const sendOne = async (sub: (typeof rows)[0]) => {
     const unsubUrl = `${baseUrl(env)}/api/unsubscribe?token=${encodeURIComponent(sub.unsubscribe_token)}`;
-    const tpl = campaignEmail(
-      env,
-      campaign.subject,
-      campaign.html_body,
-      campaign.text_body,
-      unsubUrl,
-    );
+    const tpl = campaignEmail(env, campaign.subject, campaign.html_body, campaign.text_body, unsubUrl);
     const r = await sendEmail(env, {
       to: sub.email,
       subject: campaign.subject,
@@ -123,24 +147,19 @@ export async function handleCampaignSend(
       await env.DB.prepare(
         `INSERT INTO deliveries (id, campaign_id, subscriber_id, provider_message_id, status, error, sent_at)
          VALUES (?, ?, ?, ?, 'sent', NULL, ?)`,
-      )
-        .bind(did, campaign.id, sub.id, r.id, now)
-        .run();
+      ).bind(did, campaign.id, sub.id, r.id, now).run();
     } else {
       failed++;
       await env.DB.prepare(
         `INSERT INTO deliveries (id, campaign_id, subscriber_id, provider_message_id, status, error, sent_at)
          VALUES (?, ?, ?, NULL, 'failed', ?, ?)`,
-      )
-        .bind(did, campaign.id, sub.id, r.error, now)
-        .run();
+      ).bind(did, campaign.id, sub.id, r.error, now).run();
     }
   };
 
   for (let i = 0; i < rows.length; i += CHUNK) {
     const part = rows.slice(i, i + CHUNK);
     await Promise.all(part.map((s) => sendOne(s)));
-    // Pause between chunks to stay under Resend's 5 req/sec rate limit
     if (i + CHUNK < rows.length) await sleep(CHUNK_DELAY_MS);
   }
 
