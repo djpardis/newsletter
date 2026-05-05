@@ -4,7 +4,7 @@ import { listUnsubscribeHeaders } from "./list-unsubscribe.js";
 export interface SendEmailInput {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
   text: string;
   /** Used for List-Unsubscribe on marketing mail; omit or ignored when transactional */
   unsubscribeUrl?: string;
@@ -24,9 +24,9 @@ export async function sendEmail(
     from: env.FROM_EMAIL,
     to: [input.to],
     subject: input.subject,
-    html: input.html,
     text: input.text,
   };
+  if (input.html) payload.html = input.html;
   if (!input.transactional && input.unsubscribeUrl) {
     payload.headers = listUnsubscribeHeaders(env, input.unsubscribeUrl);
   }
