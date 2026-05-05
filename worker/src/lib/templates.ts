@@ -14,51 +14,12 @@ export function siteUrl(env: Env): string {
   return (env.SITE_URL ?? env.BASE_URL).replace(/\/$/, "");
 }
 
-/** True when COMPANY_ADDRESS is a non-empty string. */
-function hasAddress(env: Env): boolean {
-  return typeof env.COMPANY_ADDRESS === "string" && env.COMPANY_ADDRESS.length > 0;
-}
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-/** HTML signature block: — Brand\nTagline (if set). */
-function signatureBlock(env: Env): string {
-  const brand = escapeHtml(brandName(env));
-  const tag = env.SITE_TAGLINE ?? "";
-  const tagLine = tag ? `<br/>${escapeHtml(tag)}` : "";
-  return `<p>— ${brand}${tagLine}</p>`;
-}
-
-/** Plain-text signature: — Brand\nTagline (if set). */
-function signatureText(env: Env): string {
-  const brand = brandName(env);
-  const tag = env.SITE_TAGLINE ?? "";
-  return tag ? `\n\n— ${brand}\n${tag}` : `\n\n— ${brand}`;
-}
-
-export function footerBlock(env: Env, unsubscribeUrl: string): string {
-  const brand = brandName(env);
-  const site = siteUrl(env);
-  const addressLine = hasAddress(env)
-    ? `<br/>\n    ${escapeHtml(env.COMPANY_ADDRESS as string)}`
-    : "";
-  return `
-  ${signatureBlock(env)}
-  <p style="margin-top:24px;">
-    You're receiving this because you subscribed at <a href="${site}">${escapeHtml(brand)}</a>. To stop, <a href="${unsubscribeUrl}">unsubscribe here</a>.${addressLine}
-  </p>`;
-}
-
-export function footerText(env: Env, unsubscribeUrl: string): string {
-  const brand = brandName(env);
-  const addressLine = hasAddress(env) ? `\n${env.COMPANY_ADDRESS}` : "";
-  return `${signatureText(env)}\n\n---\nYou're receiving this because you subscribed at ${brand}. To stop, unsubscribe here:\n${unsubscribeUrl}${addressLine}`;
 }
 
 export function confirmEmail(
@@ -99,15 +60,14 @@ export function unsubscribedPage(env: Env): string {
 }
 
 export function campaignEmail(
-  env: Env,
+  _env: Env,
   htmlBody: string,
   textBody: string,
   unsubscribeUrl: string,
 ): { html: string; text: string } {
-  const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;line-height:1.5">
-  ${htmlBody}
-  ${footerBlock(env, unsubscribeUrl)}
-  </body></html>`;
-  const text = `${textBody}${footerText(env, unsubscribeUrl)}`;
+  const html = htmlBody
+    .replaceAll("{{unsubscribe_url}}", unsubscribeUrl)
+    .replaceAll("%7B%7Bunsubscribe_url%7D%7D", unsubscribeUrl);
+  const text = textBody.replaceAll("{{unsubscribe_url}}", unsubscribeUrl);
   return { html, text };
 }
