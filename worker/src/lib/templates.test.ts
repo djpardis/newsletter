@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   baseUrl,
+  confirmOkPage,
   confirmEmail,
   footerBlock,
   footerText,
   siteUrl,
+  unsubscribedPage,
 } from "./templates.js";
 import type { Env } from "../types.js";
 
@@ -129,5 +131,26 @@ describe("footerBlock / footerText", () => {
       "https://x/unsub?t=1",
     );
     expect(block).toContain("Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA");
+  });
+});
+
+describe("confirmation pages", () => {
+  const env = baseEnv({
+    SITE_URL: "https://futureshock.media",
+    SITE_NAME: "Future Shock Media",
+  });
+
+  it("does not link the top brand label on the subscribe confirmation page", () => {
+    const html = confirmOkPage(env);
+    expect(html).toContain(">Future Shock Media</p>");
+    expect(html).toContain('Thank you for subscribing to <a href="https://futureshock.media">Future Shock Media</a>.');
+    expect(html).not.toContain('<p style="font-size:.85rem;color:#888;margin-bottom:1.5rem"><a');
+  });
+
+  it("does not link the top brand label on the unsubscribe confirmation page", () => {
+    const html = unsubscribedPage(env);
+    expect(html).toContain(">Future Shock Media</p>");
+    expect(html).toContain('You won\'t receive any further emails from <a href="https://futureshock.media">Future Shock Media</a>.');
+    expect(html).not.toContain('<p style="font-size:.85rem;color:#888;margin-bottom:1.5rem"><a');
   });
 });
