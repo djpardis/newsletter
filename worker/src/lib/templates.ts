@@ -81,9 +81,9 @@ export function confirmEmail(
   const html = `<!DOCTYPE html><html><body>
   <p>Thanks for signing up to <a href="${site}">${escapeHtml(brand)}</a>.</p>
   <p><a href="${confirmUrl}">Confirm</a> your email.</p>
-  <p>If you did not request this, ignore this message.</p>
+  <p>If you did not subscribe, ignore this message.</p>
   </body></html>`;
-  const text = `Thanks for signing up to ${brand}.\n\nConfirm your email: ${confirmUrl}\n\nIf you did not request this, ignore this message.`;
+  const text = `Thanks for signing up to ${brand}.\n\nConfirm your email: ${confirmUrl}\n\nIf you did not subscribe, ignore this message.`;
   return { subject, html, text };
 }
 
