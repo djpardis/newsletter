@@ -1,3 +1,6 @@
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   campaignKindForType,
@@ -91,6 +94,16 @@ describe("campaign-content", () => {
   });
 
   it("expands the shared footer marker from the site campaign folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "newsletter-campaign-test-"));
+    const campaignsDir = join(root, "campaigns");
+    const templatesDir = join(campaignsDir, "_templates");
+    mkdirSync(templatesDir, { recursive: true });
+    writeFileSync(
+      join(templatesDir, "footer.md"),
+      "More soon.\n\n— Future Shock Media  \n*Boring on purpose.*\n\nYou're receiving this because you subscribed to Future Shock Media.  \nNo longer interested? [Unsubscribe →]({{unsubscribe_url}})\n",
+      "utf8",
+    );
+    const campaignPath = join(templatesDir, "update.md");
     const source = [
       "---",
       "slug: 2026-05-test",
@@ -107,7 +120,7 @@ describe("campaign-content", () => {
 
     const expanded = expandCampaignFooterPlaceholder(
       source,
-      "/Users/djpardis/Documents/107wins/campaigns/_templates/update.md",
+      campaignPath,
     );
 
     expect(expanded).toContain("More soon.");
