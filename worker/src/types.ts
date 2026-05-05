@@ -41,6 +41,8 @@ export interface Env {
    * Configure via [[queues.producers]] in wrangler.toml.
    */
   SEND_QUEUE?: Queue<SendMessage>;
+  /** Git SHA injected at deploy time via --var DEPLOY_SHA:$(git rev-parse --short HEAD) */
+  DEPLOY_SHA?: string;
 }
 
 export type SubscriberStatus =
