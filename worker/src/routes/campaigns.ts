@@ -82,9 +82,16 @@ export async function handleCampaignSend(
 
   if (!campaign) return Response.json({ error: "campaign_not_found" }, { status: 404 });
 
+  // Skip subscribers who already have a delivery row for this campaign (safe to re-run on partial failure)
   const subs = await env.DB.prepare(
-    `SELECT id, email, unsubscribe_token FROM subscribers WHERE status = 'active' AND unsubscribe_token IS NOT NULL`,
-  ).all<{
+    `SELECT s.id, s.email, s.unsubscribe_token
+     FROM subscribers s
+     LEFT JOIN deliveries d ON d.subscriber_id = s.id AND d.campaign_id = ?
+     WHERE s.status = 'active'
+       AND s.unsubscribe_token IS NOT NULL
+       AND d.id IS NULL
+     ORDER BY s.id`,
+  ).bind(campaignId).all<{
     id: string;
     email: string;
     unsubscribe_token: string;
