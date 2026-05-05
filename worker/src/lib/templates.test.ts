@@ -78,11 +78,10 @@ describe("confirmEmail", () => {
     expect(html).toContain("&amp; Co.");
   });
 
-  it("includes a short text divider between the body and the disclaimer", () => {
-    const { html, text } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
-    expect(html).toContain("<p>----</p>");
+  it("does not include a divider between the body and the disclaimer", () => {
+    const { html } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
+    expect(html).not.toContain("----");
     expect(html).not.toContain("<hr");
-    expect(text).toContain("---");
   });
 });
 
