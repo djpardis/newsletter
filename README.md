@@ -1,6 +1,6 @@
 # Newsletter service
 
-Newsletter backend that runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/), stores subscribers in [D1](https://developers.cloudflare.com/d1/), and sends via [Resend](https://resend.com/). Supports double opt-in, [RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058) one-click unsubscribe, bounce and complaint handling via webhooks, and plain-text-first campaign delivery through Cloudflare Queues.
+Newsletter backend that runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/), stores subscribers in [D1](https://developers.cloudflare.com/d1/), and sends via [Resend](https://resend.com/). Supports double opt-in, [RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058) one-click unsubscribe, automatic bounce and complaint suppression, and plain-text-first campaign delivery through [Cloudflare Queues](https://developers.cloudflare.com/queues/).
 
 Campaign sends are async and queue-backed. There is no synchronous delivery confirmation and no open/click tracking. Resend's API throughput is the practical ceiling; the queue consumer retries transient failures automatically. Sends are triggered via CLI or API, not scheduled.
 
