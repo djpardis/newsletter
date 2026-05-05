@@ -4,16 +4,6 @@ function brandName(env: Env): string {
   return env.SITE_NAME ?? "Newsletter";
 }
 
-/** Hostname shown to subscribers ("you signed up at <host>"). Prefers SITE_URL. */
-function siteHost(env: Env): string {
-  const source = env.SITE_URL ?? env.BASE_URL;
-  try {
-    return new URL(source).hostname;
-  } catch {
-    return "our website";
-  }
-}
-
 /** Worker URL (used for confirm/unsubscribe links). */
 export function baseUrl(env: Env): string {
   return env.BASE_URL.replace(/\/$/, "");
