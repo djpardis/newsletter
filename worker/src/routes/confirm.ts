@@ -49,7 +49,7 @@ export async function handleConfirm(
     ).bind(now, unsub, row.subscriber_id),
   ]);
 
-  await audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now);
+  audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now).catch(console.error);
   return new Response(confirmOkPage(env), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
