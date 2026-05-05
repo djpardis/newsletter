@@ -76,10 +76,9 @@ export function confirmEmail(
   confirmUrl: string,
 ): { subject: string; html: string; text: string } {
   const brand = brandName(env);
-  const site = siteUrl(env);
   const subject = `Confirm your subscription to ${brand}`;
   const html = `<!DOCTYPE html><html><body>
-  <p>Thank you for subscribing to <a href="${site}">${escapeHtml(brand)}</a>.</p>
+  <p>Thank you for subscribing to ${escapeHtml(brand)}.</p>
   <p><a href="${confirmUrl}">Confirm</a> your email.</p>
   <p>If you did not subscribe, ignore this message.</p>
   </body></html>`;

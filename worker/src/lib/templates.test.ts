@@ -39,71 +39,88 @@ describe("siteUrl / baseUrl", () => {
 });
 
 describe("confirmEmail", () => {
-  it("links the brand name to SITE_URL when SITE_URL is set", () => {
-    const env = baseEnv({ SITE_URL: "https://example.com", SITE_NAME: "Vance Refrigeration" });
-    const { html, text } = confirmEmail(env, "https://newsletter.example.com/api/confirm?token=x");
-    expect(html).toContain('href="https://example.com">Vance Refrigeration</a>');
-    expect(text).toContain("Vance Refrigeration (https://example.com)");
+  const env = baseEnv({
+    SITE_URL: "https://futureshock.media",
+    SITE_NAME: "Future Shock Media",
   });
+  const confirmUrl = "https://newsletter.futureshock.media/api/confirm?token=TOK";
 
-  it("falls back to BASE_URL when SITE_URL is unset", () => {
-    const env = baseEnv();
-    const { html } = confirmEmail(env, "https://newsletter.example.com/api/confirm?token=x");
-    expect(html).toContain('href="https://newsletter.example.com">');
-  });
-
-  it("renders only the word 'Confirm' as the link to confirmUrl", () => {
-    const { html, text } = confirmEmail(
-      baseEnv({ SITE_NAME: "Vance Refrigeration" }),
-      "https://newsletter.example.com/api/confirm?token=t",
+  // CANONICAL confirmation email. Do NOT change unless explicitly requested.
+  // Adding a signature, footer, "More soon.", postal address, font styling,
+  // or any other line will break this test on purpose.
+  it("matches the canonical confirmation email", () => {
+    const { html, text } = confirmEmail(env, confirmUrl);
+    expect(html).toBe(
+      [
+        "<!DOCTYPE html><html><body>",
+        "  <p>Thank you for subscribing to Future Shock Media.</p>",
+        `  <p><a href="${confirmUrl}">Confirm</a> your email.</p>`,
+        "  <p>If you did not subscribe, ignore this message.</p>",
+        "  </body></html>",
+      ].join("\n"),
     );
-    expect(html).toContain('<a href="https://newsletter.example.com/api/confirm?token=t">Confirm</a> your email.');
-    expect(text).toContain("Confirm your email: https://newsletter.example.com/api/confirm?token=t");
+    expect(text).toBe(
+      [
+        "Thank you for subscribing to Future Shock Media.",
+        "",
+        `Confirm your email: ${confirmUrl}`,
+        "",
+        "If you did not subscribe, ignore this message.",
+      ].join("\n"),
+    );
   });
 
-  it("does not include a postal address or footer site link", () => {
-    const env = baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" });
-    const { html, text } = confirmEmail(env, "https://x/confirm?token=t");
-    expect(html).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
-    expect(text).not.toContain("Vance Refrigeration, 1725 Slough Avenue");
-    expect(html).not.toContain("font-size:12px");
-    expect(html).not.toContain("color:#666");
+  it("subject is 'Confirm your subscription to <brand>'", () => {
+    const { subject } = confirmEmail(env, confirmUrl);
+    expect(subject).toBe("Confirm your subscription to Future Shock Media");
   });
 
   it("escapes HTML in SITE_NAME", () => {
-    const env = baseEnv({ SITE_NAME: "<script>x</script> & Co." });
-    const { html } = confirmEmail(env, "https://x/confirm?token=t");
+    const e = baseEnv({ SITE_NAME: "<script>x</script> & Co." });
+    const { html } = confirmEmail(e, confirmUrl);
     expect(html).not.toContain("<script>x</script>");
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("&amp; Co.");
   });
-
-  it("does not include a divider between the body and the disclaimer", () => {
-    const { html } = confirmEmail(baseEnv(), "https://x/confirm?token=t");
-    expect(html).not.toContain("----");
-    expect(html).not.toContain("<hr");
-  });
 });
 
 describe("footerBlock / footerText", () => {
-  it("uses SITE_URL hostname in the 'you signed up at' line", () => {
-    const env = baseEnv({ SITE_URL: "https://example.com" });
-    const block = footerBlock(env, "https://x/unsub?t=1");
-    const text = footerText(env, "https://x/unsub?t=1");
-    expect(block).toContain("you signed up at example.com");
-    expect(text).toContain("you signed up at example.com");
+  // CANONICAL plain-text footer. Do NOT change unless explicitly requested.
+  it("matches the canonical plain-text snapshot", () => {
+    const env = baseEnv({
+      SITE_URL: "https://futureshock.media",
+      SITE_NAME: "Future Shock Media",
+      SITE_TAGLINE: "Boring on purpose.",
+    });
+    const text = footerText(env, "https://newsletter.futureshock.media/api/unsubscribe?token=U");
+    expect(text).toBe(
+      [
+        "",
+        "",
+        "— Future Shock Media",
+        "Boring on purpose.",
+        "",
+        "---",
+        "You're receiving this because you subscribed at Future Shock Media. To stop, unsubscribe here:",
+        "https://newsletter.futureshock.media/api/unsubscribe?token=U",
+      ].join("\n"),
+    );
   });
 
-  it("falls back to BASE_URL hostname when SITE_URL is unset", () => {
-    const env = baseEnv();
+  it("links the brand and unsubscribe in the HTML footer", () => {
+    const env = baseEnv({
+      SITE_URL: "https://futureshock.media",
+      SITE_NAME: "Future Shock Media",
+    });
     const block = footerBlock(env, "https://x/unsub?t=1");
-    expect(block).toContain("you signed up at newsletter.example.com");
+    expect(block).toContain('<a href="https://futureshock.media">Future Shock Media</a>');
+    expect(block).toContain('<a href="https://x/unsub?t=1">unsubscribe here</a>');
   });
 
   it("omits postal line and trailing <br/> when address is empty", () => {
     const block = footerBlock(baseEnv({ COMPANY_ADDRESS: "" }), "https://x/unsub?t=1");
     expect(block).not.toContain("[Add postal address");
-    expect(block).not.toMatch(/<br\/>\s*<\/p>/); // no dangling <br/> before </p>
+    expect(block).not.toMatch(/<br\/>\s*<\/p>/);
   });
 
   it("includes postal line when address is set", () => {
