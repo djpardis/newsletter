@@ -77,7 +77,7 @@ export async function handleSubscribe(
   const meta = await hashMeta(request);
   const rlKey =
     meta.ipHash ?? (await sha256Hex(`v1|anon|${request.cf?.colo ?? "na"}`));
-  const rl = await checkSubscribeRateLimit(env.DB, `sub:${rlKey}`, now);
+  const rl = await checkSubscribeRateLimit(env.SUBSCRIBE_RATE_LIMITER, env.DB, `sub:${rlKey}`, now);
   if (!rl.ok) {
     return Response.json(
       { error: "rate_limited", retry_after_sec: rl.retryAfterSec },
