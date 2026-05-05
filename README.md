@@ -1,6 +1,6 @@
 # Newsletter service
 
-Cloudflare Worker API for double opt-in subscriptions, list unsubscribe, and campaign delivery via Resend. Data lives in D1.
+Cloudflare Worker API for double opt-in email subscriptions, campaign delivery, and RFC 8058 list-unsubscribe. Data lives in D1. Delivery via Resend.
 
 A self-hosted alternative to MailerLite/Substack/Buttondown.
 
@@ -9,83 +9,67 @@ A self-hosted alternative to MailerLite/Substack/Buttondown.
 
 ## Requirements
 
-- Node 20+
-- Cloudflare account, [Wrangler](https://developers.cloudflare.com/workers/wrangler/) authenticated (`npx wrangler login`)
-- [Resend](https://resend.com/) API key and verified sending domain
+- **Node** ≥ 20
+- **Cloudflare** account — install [Wrangler](https://developers.cloudflare.com/workers/wrangler/) and run `npx wrangler login`
+- **Resend** account — [verify a sending domain](https://resend.com/docs/dashboard/domains/introduction) and create an API key
 
 ## Setup
 
 ```bash
 npm install
-npx wrangler d1 create newsletter   # paste the database_id into wrangler.toml
+npx wrangler d1 create newsletter          # paste database_id into wrangler.toml
+npx wrangler queues create newsletter-send
 npx wrangler d1 migrations apply newsletter --remote
 ```
 
 Local development: `npx wrangler d1 migrations apply newsletter --local && npm run dev`
 
-First deployment: see [`DEPLOYING.md`](DEPLOYING.md).
+Full deployment checklist: [`DEPLOYING.md`](DEPLOYING.md).
 
 ## Configuration
 
-| Name | Type | Purpose |
-|------|------|---------|
-| `RESEND_API_KEY` | secret | Resend API authorization |
-| `ADMIN_BEARER_TOKEN` | secret | Bearer for admin endpoints |
-| `RESEND_WEBHOOK_SECRET` | secret (optional) | Required to enable `/api/webhooks/resend` |
-| `TURNSTILE_SECRET_KEY` | secret (optional) | If set, subscribe requires Turnstile |
-| `FROM_EMAIL` | var | Resend From header |
-| `BASE_URL` | var | Public Worker URL (no trailing slash) |
-| `SITE_URL` | var (optional) | Public website URL. `GET /` redirects here; email links use this. Falls back to `BASE_URL`. |
-| `CORS_ORIGIN` | var (optional) | Allowed browser `Origin` for `/api/subscribe` |
-| `SITE_NAME` | var (optional) | Brand name in emails; default "Newsletter" |
-| `COMPANY_ADDRESS` | var (optional) | Postal line in campaign email footers. Omitted when unset. |
-| `UNSUBSCRIBE_MAILTO` | var (optional) | Extra `List-Unsubscribe` mailto |
+Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `[vars]`.
 
-```bash
-npx wrangler secret put RESEND_API_KEY
-npx wrangler secret put ADMIN_BEARER_TOKEN
-```
+| Name | Required | Purpose |
+|------|----------|---------|
+| `RESEND_API_KEY` | yes | Resend API key |
+| `ADMIN_BEARER_TOKEN` | yes | Bearer token for admin endpoints |
+| `FROM_EMAIL` | yes | Sender address (`Name <email@domain>`) |
+| `BASE_URL` | yes | Public Worker URL (no trailing slash) |
+| `RESEND_WEBHOOK_SECRET` | optional | Enables `/api/webhooks/resend` |
+| `TURNSTILE_SECRET_KEY` | optional | Requires Cloudflare Turnstile on subscribe |
+| `SITE_URL` | optional | Website URL for redirects and email links; falls back to `BASE_URL` |
+| `CORS_ORIGIN` | optional | Allowed origin for `/api/subscribe` |
+| `SITE_NAME` | optional | Brand name in emails (default: `Newsletter`) |
+| `COMPANY_ADDRESS` | optional | Postal line in campaign footers (CAN-SPAM/CASL) |
+| `UNSUBSCRIBE_MAILTO` | optional | Mailto address for `List-Unsubscribe` header |
 
 See `.env.example` for a full checklist.
 
-## HTTP API
+## API
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/health` | — | Liveness |
-| `OPTIONS`, `POST` | `/api/subscribe` | — | JSON subscribe; see `examples/` |
-| `GET` | `/api/confirm` | — | Query `token`; double opt-in |
-| `GET`, `POST` | `/api/unsubscribe` | — | Query `token`; RFC 8058 POST supported |
-| `POST` | `/api/campaigns/send` | Bearer | Send campaign to active subscribers |
-| `POST` | `/api/webhooks/resend` | Svix signature | Handle bounce/complaint events |
+| `GET` | `/health` | — | Liveness check |
+| `POST` | `/api/subscribe` | — | Subscribe; see `examples/` |
+| `GET` | `/api/confirm` | — | Double opt-in confirmation |
+| `GET`, `POST` | `/api/unsubscribe` | — | One-click unsubscribe (RFC 8058) |
+| `POST` | `/api/campaigns/send` | Bearer | Enqueue campaign to active subscribers |
+| `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |
 | `POST` | `/api/admin/delete` | Bearer | Hard-delete a subscriber (GDPR) |
 
-## Operator scripts
+## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `npx tsx scripts/import-csv.ts <file.csv>` | Import `email[,status]` |
-| `npx tsx scripts/export-csv.ts` | Export subscribers as CSV |
-| `npx tsx scripts/create-campaign.ts` | Create a campaign row |
-| `npx tsx scripts/send-campaign.ts` | Trigger `POST /api/campaigns/send` |
-
-A daily cron (`wrangler.toml` `[triggers]`) prunes expired tokens and old audit events.
-
-## Layout
-
-| Path | Role |
-|------|------|
-| `worker/src/index.ts` | Router and scheduled handler |
-| `worker/src/routes/` | HTTP handlers |
-| `worker/src/lib/` | Email, validation, rate limits, signatures, cleanup |
-| `migrations/` | D1 SQL |
-| `scripts/` | CLI tools |
-| `examples/` | Reference signup-form integration |
-| `.github/workflows/` | CI and deploy |
+```bash
+npx tsx scripts/import-csv.ts <file.csv>   # import email[,status]
+npx tsx scripts/export-csv.ts              # export subscribers as CSV
+npx tsx scripts/create-campaign.ts --md post.md --slug s --subject "..." --kind manual
+npx tsx scripts/send-campaign.ts           # trigger POST /api/campaigns/send
+```
 
 ## Contributing & security
 
-- Contributions: see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- Deployment: see [`DEPLOYING.md`](DEPLOYING.md).
-- Security disclosures: see [`SECURITY.md`](SECURITY.md).
-- License: [MIT](LICENSE).
+- Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Deployment: [`DEPLOYING.md`](DEPLOYING.md)
+- Security disclosures: [`SECURITY.md`](SECURITY.md)
+- License: [MIT](LICENSE)
