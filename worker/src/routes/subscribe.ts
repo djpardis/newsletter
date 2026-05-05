@@ -46,7 +46,6 @@ async function sendConfirmEmail(
     subject: tpl.subject,
     html: tpl.html,
     text: tpl.text,
-    unsubscribeUrl: confirmUrl,
     transactional: true,
   });
 }
@@ -105,7 +104,7 @@ export async function handleSubscribe(
     .first<{ id: string; status: string }>();
 
   if (existing?.status === "active") {
-    await audit(env.DB, "subscribe_idempotent_active", existing.id, { email }, now);
+    audit(env.DB, "subscribe_idempotent_active", existing.id, { email }, now).catch(console.error);
     return Response.json({ ok: true, state: "active" });
   }
 
@@ -157,6 +156,6 @@ export async function handleSubscribe(
   const sent = await sendConfirmEmail(env, email, plainToken);
   if (!sent.ok) return emailFailureResponse(sent.error);
 
-  await audit(env.DB, auditEvent, subscriberId, auditPayload, now);
+  audit(env.DB, auditEvent, subscriberId, auditPayload, now).catch(console.error);
   return Response.json({ ok: true, state: "pending" });
 }
