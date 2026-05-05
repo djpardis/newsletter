@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   baseUrl,
+  campaignEmail,
   confirmOkPage,
   confirmEmail,
-  footerBlock,
-  footerText,
   siteUrl,
   unsubscribedPage,
 } from "./templates.js";
@@ -86,54 +85,6 @@ describe("confirmEmail", () => {
   });
 });
 
-describe("footerBlock / footerText", () => {
-  // CANONICAL plain-text footer. Do NOT change unless explicitly requested.
-  it("matches the canonical plain-text snapshot", () => {
-    const env = baseEnv({
-      SITE_URL: "https://futureshock.media",
-      SITE_NAME: "Future Shock Media",
-      SITE_TAGLINE: "Boring on purpose.",
-    });
-    const text = footerText(env, "https://newsletter.futureshock.media/api/unsubscribe?token=U");
-    expect(text).toBe(
-      [
-        "",
-        "",
-        "— Future Shock Media",
-        "Boring on purpose.",
-        "",
-        "---",
-        "You're receiving this because you subscribed at Future Shock Media. To stop, unsubscribe here:",
-        "https://newsletter.futureshock.media/api/unsubscribe?token=U",
-      ].join("\n"),
-    );
-  });
-
-  it("links the brand and unsubscribe in the HTML footer", () => {
-    const env = baseEnv({
-      SITE_URL: "https://futureshock.media",
-      SITE_NAME: "Future Shock Media",
-    });
-    const block = footerBlock(env, "https://x/unsub?t=1");
-    expect(block).toContain('<a href="https://futureshock.media">Future Shock Media</a>');
-    expect(block).toContain('<a href="https://x/unsub?t=1">unsubscribe here</a>');
-  });
-
-  it("omits postal line and trailing <br/> when address is empty", () => {
-    const block = footerBlock(baseEnv({ COMPANY_ADDRESS: "" }), "https://x/unsub?t=1");
-    expect(block).not.toContain("[Add postal address");
-    expect(block).not.toMatch(/<br\/>\s*<\/p>/);
-  });
-
-  it("includes postal line when address is set", () => {
-    const block = footerBlock(
-      baseEnv({ COMPANY_ADDRESS: "Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA" }),
-      "https://x/unsub?t=1",
-    );
-    expect(block).toContain("Vance Refrigeration, 1725 Slough Avenue, Suite 210, Scranton, PA");
-  });
-});
-
 describe("confirmation pages", () => {
   const env = baseEnv({
     SITE_URL: "https://futureshock.media",
@@ -150,5 +101,37 @@ describe("confirmation pages", () => {
     const html = unsubscribedPage(env);
     expect(html).toContain('You won\'t receive any further emails from <a href="https://futureshock.media">Future Shock Media</a>.');
     expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
+  });
+});
+
+describe("campaignEmail", () => {
+  it("replaces unsubscribe placeholders without adding font or layout styles", () => {
+    const tpl = campaignEmail(
+      baseEnv(),
+      [
+        "<!DOCTYPE html>",
+        "<html>",
+        "<body>",
+        "<p>Hey,</p>",
+        '<p><a href="{{unsubscribe_url}}">unsubscribe here</a>.</p>',
+        "</body>",
+        "</html>",
+      ].join("\n"),
+      [
+        "Hey,",
+        "",
+        "You're receiving this because you subscribed to Future Shock Media. To stop, unsubscribe here ({{unsubscribe_url}}).",
+      ].join("\n"),
+      "https://newsletter.example.com/api/unsubscribe?token=U",
+    );
+
+    expect(tpl.html).toContain(
+      '<a href="https://newsletter.example.com/api/unsubscribe?token=U">unsubscribe here</a>',
+    );
+    expect(tpl.html).not.toContain("font-family");
+    expect(tpl.html).not.toContain("style=");
+    expect(tpl.text).toContain(
+      "unsubscribe here (https://newsletter.example.com/api/unsubscribe?token=U).",
+    );
   });
 });

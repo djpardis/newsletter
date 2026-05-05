@@ -3,8 +3,6 @@
  *
  * Usage:
  *   NEWSLETTER_API_URL=https://newsletter.example.com ADMIN_BEARER_TOKEN=secret npx tsx scripts/send-campaign.ts --id <uuid>
- *   # or inline payload (creates + sends):
- *   npx tsx scripts/send-campaign.ts --slug S --subject S --kind manual --html "<p>x</p>" --text "x"
  */
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -21,20 +19,9 @@ async function main() {
   }
 
   const id = arg("--id");
-  let body: Record<string, string | undefined>;
-  if (id) {
-    body = { campaign_id: id };
-  } else {
-    const slug = arg("--slug");
-    const subject = arg("--subject");
-    const kind = arg("--kind");
-    const html = arg("--html");
-    const text = arg("--text");
-    if (!slug || !subject || !kind || !html || !text) {
-      console.error("Provide --id or full inline flags.");
-      process.exit(1);
-    }
-    body = { slug, subject, kind, html_body: html, text_body: text };
+  if (!id) {
+    console.error("Provide --id. Create and review campaigns before sending.");
+    process.exit(1);
   }
 
   const res = await fetch(`${base}/api/campaigns/send`, {
@@ -43,7 +30,7 @@ async function main() {
       "content-type": "application/json",
       authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ campaign_id: id }),
   });
   const textOut = await res.text();
   console.log(textOut);
