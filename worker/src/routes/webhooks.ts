@@ -52,17 +52,15 @@ export async function handleResendWebhook(
   const eventType = payload.type ?? "unknown";
   const now = Date.now();
 
-  try {
-    await env.DB.prepare(
-      `INSERT INTO webhook_events
-         (id, source, event_id, event_type, payload_json, created_at)
-       VALUES (?, 'resend', ?, ?, ?, ?)`,
-    )
-      .bind(uuid(), eventId, eventType, rawBody.slice(0, 4000), now)
-      .run();
-  } catch {
-    return Response.json({ ok: true, duplicate: true });
-  }
+  // Record the event for idempotency. OR IGNORE lets us continue on duplicate
+  // so the subscriber update still runs even if the event was already stored.
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO webhook_events
+       (id, source, event_id, event_type, payload_json, created_at)
+     VALUES (?, 'resend', ?, ?, ?, ?)`,
+  )
+    .bind(uuid(), eventId, eventType, rawBody.slice(0, 4000), now)
+    .run();
 
   const newStatus = statusForEvent(eventType);
   const email = targetEmail(payload);
@@ -80,7 +78,7 @@ export async function handleResendWebhook(
       )
         .bind(newStatus, now, sub.id)
         .run();
-      await audit(env.DB, `webhook_${newStatus}`, sub.id, { email }, now);
+      audit(env.DB, `webhook_${newStatus}`, sub.id, { email }, now).catch(console.error);
     }
   }
 

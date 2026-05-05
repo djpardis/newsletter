@@ -133,7 +133,7 @@ export async function handleCampaignSend(
 
   const sendOne = async (sub: (typeof rows)[0]) => {
     const unsubUrl = `${baseUrl(env)}/api/unsubscribe?token=${encodeURIComponent(sub.unsubscribe_token)}`;
-    const tpl = campaignEmail(env, campaign.subject, campaign.html_body, campaign.text_body, unsubUrl);
+    const tpl = campaignEmail(env, campaign.html_body, campaign.text_body, unsubUrl);
     const r = await sendEmail(env, {
       to: sub.email,
       subject: campaign.subject,
