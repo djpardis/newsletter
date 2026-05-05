@@ -86,13 +86,11 @@ export function confirmEmail(
   return { subject, html, text };
 }
 
-function okPageShell(title: string, heading: string, body: string, env: Env): string {
-  const name = brandName(env);
+function okPageShell(title: string, heading: string, body: string, _env: Env): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
   <style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;line-height:1.6;margin:0;padding:3rem 1.5rem;background:#fff;color:#111}main{max-width:36rem;margin:auto}h1{font-size:1.3rem;font-weight:600;margin:0 0 .5rem}p{margin:.5rem 0;color:#444}a{color:inherit}</style>
   </head>
   <body><main>
-  <p style="font-size:.85rem;color:#888;margin-bottom:1.5rem">${escapeHtml(name)}</p>
   <h1>${escapeHtml(heading)}</h1>
   <p>${body}</p>
   </main></body></html>`;
