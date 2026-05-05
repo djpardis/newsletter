@@ -30,3 +30,16 @@ npm run deploy   # manual deploy; CI uses the deploy workflow
 - TypeScript, ES modules. No new runtime dependencies without discussion — the Worker is intentionally small.
 - Tests live next to the code (`*.test.ts`). Add coverage for new behavior.
 - Don't commit secrets or environment-specific values to `wrangler.toml` (`[vars]`). Use `wrangler secret put` and the dashboard.
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `worker/src/index.ts` | Router, scheduled handler, queue consumer entry |
+| `worker/src/routes/` | HTTP handlers |
+| `worker/src/routes/queue-consumer.ts` | Campaign send queue consumer |
+| `worker/src/lib/` | Email, validation, rate limits, signatures, cleanup |
+| `migrations/` | D1 SQL migrations |
+| `scripts/` | CLI tools (import, export, create/send campaign) |
+| `examples/` | Reference signup-form integration |
+| `.github/workflows/` | CI and deploy |
