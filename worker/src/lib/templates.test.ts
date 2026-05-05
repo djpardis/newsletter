@@ -102,6 +102,14 @@ describe("confirmation pages", () => {
     expect(html).toContain('You won\'t receive any further emails from <a href="https://futureshock.media">Future Shock Media</a>.');
     expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
   });
+
+  it("uses responsive viewport and wrapping styles", () => {
+    const html = confirmOkPage(env);
+    expect(html).toContain('<meta name="viewport" content="width=device-width,initial-scale=1">');
+    expect(html).toContain("width:min(100%,36rem)");
+    expect(html).toContain("overflow-wrap:anywhere");
+    expect(html).toContain("clamp(");
+  });
 });
 
 describe("campaignEmail", () => {
@@ -113,25 +121,25 @@ describe("campaignEmail", () => {
         "<html>",
         "<body>",
         "<p>Hey,</p>",
-        '<p><a href="{{unsubscribe_url}}">unsubscribe here</a>.</p>',
+        '<p>No longer interested? <a href="{{unsubscribe_url}}">Unsubscribe →</a></p>',
         "</body>",
         "</html>",
       ].join("\n"),
       [
         "Hey,",
         "",
-        "You're receiving this because you subscribed to Future Shock Media. To stop, unsubscribe here ({{unsubscribe_url}}).",
+        "No longer interested? Unsubscribe → ({{unsubscribe_url}})",
       ].join("\n"),
       "https://newsletter.example.com/api/unsubscribe?token=U",
     );
 
     expect(tpl.html).toContain(
-      '<a href="https://newsletter.example.com/api/unsubscribe?token=U">unsubscribe here</a>',
+      '<a href="https://newsletter.example.com/api/unsubscribe?token=U">Unsubscribe →</a>',
     );
     expect(tpl.html).not.toContain("font-family");
     expect(tpl.html).not.toContain("style=");
     expect(tpl.text).toContain(
-      "unsubscribe here (https://newsletter.example.com/api/unsubscribe?token=U).",
+      "No longer interested? Unsubscribe → (https://newsletter.example.com/api/unsubscribe?token=U)",
     );
   });
 });

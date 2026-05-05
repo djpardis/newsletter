@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { marked } from "marked";
 import type { CampaignKind } from "../../worker/src/types.js";
 
@@ -29,6 +30,7 @@ export interface CampaignRenderResult {
 
 const UNSUBSCRIBE_PLACEHOLDER = "{{unsubscribe_url}}";
 const ENCODED_UNSUBSCRIBE_PLACEHOLDER = "%7B%7Bunsubscribe_url%7D%7D";
+const CAMPAIGN_FOOTER_PLACEHOLDER = "{{campaign_footer}}";
 
 function frontmatterValue(raw: string): string {
   const trimmed = raw.trim();
@@ -112,13 +114,27 @@ export function validateCampaignMarkdown(md: string): string[] {
   if (!trimmed.startsWith("Hey,")) {
     errors.push('Campaign body must start with "Hey,".');
   }
-  if (!trimmed.includes("\nMore soon.\n\n— Future Shock Media\nBoring on purpose.\n")) {
+  if (!trimmed.includes("\nMore soon.\n\n— Future Shock Media  \n*Boring on purpose.*\n")) {
     errors.push("Campaign body must include the canonical closing/signature block.");
   }
-  if (!trimmed.includes("You're receiving this because you subscribed to Future Shock Media. To stop, [unsubscribe here]({{unsubscribe_url}}).")) {
-    errors.push("Campaign body must include the canonical unsubscribe footer link with {{unsubscribe_url}}.");
+  if (!trimmed.includes("{{unsubscribe_url}}")) {
+    errors.push("Campaign body must include {{unsubscribe_url}}.");
+  }
+  if (!trimmed.includes("You're receiving this because you subscribed to Future Shock Media.  \nNo longer interested?")) {
+    errors.push('Campaign footer must put "No longer interested?" on the next line in the same paragraph.');
+  }
+  if (!/\[Unsubscribe →\]\(\{\{unsubscribe_url\}\}\)/.test(trimmed)) {
+    errors.push('Campaign body must link only "Unsubscribe →" to {{unsubscribe_url}}.');
   }
 
+  return errors;
+}
+
+export function validateCampaignSubject(subject: string): string[] {
+  const errors: string[] = [];
+  if (subject.includes("—")) {
+    errors.push("Campaign subject must not use an em dash. Write it like a news update.");
+  }
   return errors;
 }
 
@@ -133,6 +149,8 @@ export function renderCampaignMarkdown(
 
   if (!slug) throw new Error("Missing campaign slug.");
   if (!subject) throw new Error("Missing campaign subject.");
+  const subjectErrors = validateCampaignSubject(subject);
+  if (subjectErrors.length > 0) throw new Error(subjectErrors.join("\n"));
   if (!typeRaw || !isCampaignType(typeRaw)) {
     throw new Error("Campaign type must be update, episode, or other.");
   }
@@ -156,11 +174,34 @@ export function renderCampaignMarkdown(
   };
 }
 
+function findCampaignFooterFile(markdownFile: string): string {
+  let dir = dirname(resolve(markdownFile));
+  for (;;) {
+    const candidate = join(dir, "_templates", "footer.md");
+    if (existsSync(candidate)) return candidate;
+
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  throw new Error("Missing campaigns/_templates/footer.md for {{campaign_footer}}.");
+}
+
+export function expandCampaignFooterPlaceholder(source: string, markdownFile: string): string {
+  if (!source.includes(CAMPAIGN_FOOTER_PLACEHOLDER)) return source;
+  const footer = readFileSync(findCampaignFooterFile(markdownFile), "utf8").trim();
+  return source.replaceAll(CAMPAIGN_FOOTER_PLACEHOLDER, footer);
+}
+
 export function renderCampaignMarkdownFile(
   file: string,
   options: CampaignRenderOptions = {},
 ): CampaignRenderResult {
-  return renderCampaignMarkdown(readFileSync(file, "utf8"), options);
+  return renderCampaignMarkdown(
+    expandCampaignFooterPlaceholder(readFileSync(file, "utf8"), file),
+    options,
+  );
 }
 
 export function previewWithUnsubscribeUrl(
