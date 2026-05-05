@@ -38,8 +38,8 @@ export function confirmEmail(
 }
 
 function okPageShell(title: string, heading: string, body: string, _env: Env): string {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
-  <style>*{box-sizing:border-box}body{font-family:system-ui,sans-serif;line-height:1.6;margin:0;padding:3rem 1.5rem;background:#fff;color:#111}main{max-width:36rem;margin:auto}h1{font-size:1.3rem;font-weight:600;margin:0 0 .5rem}p{margin:.5rem 0;color:#444}a{color:inherit}</style>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title>
+  <style>*{box-sizing:border-box}html{font-size:16px}body{font-family:system-ui,sans-serif;line-height:1.6;margin:0;padding:clamp(1.5rem,7vw,3rem) 1rem;background:#fff;color:#111;-webkit-text-size-adjust:100%}main{width:min(100%,36rem);margin:0 auto}h1{font-size:clamp(1.5rem,7vw,2rem);line-height:1.2;font-weight:600;margin:0 0 .75rem}p{font-size:clamp(1rem,4.5vw,1.125rem);margin:.5rem 0;color:#444}a{color:inherit;overflow-wrap:anywhere}</style>
   </head>
   <body><main>
   <h1>${escapeHtml(heading)}</h1>
