@@ -79,6 +79,7 @@ export async function handleSendQueue(
     const result = await sendEmail(env, {
       to: sub.email,
       subject: campaign.subject,
+      html: tpl.html,
       text: tpl.text,
       unsubscribeUrl: unsubUrl,
     });
