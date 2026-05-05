@@ -6,8 +6,8 @@ export interface SendEmailInput {
   subject: string;
   html: string;
   text: string;
-  /** Used for List-Unsubscribe on marketing mail; ignored when transactional */
-  unsubscribeUrl: string;
+  /** Used for List-Unsubscribe on marketing mail; omit or ignored when transactional */
+  unsubscribeUrl?: string;
   /** Opt-in / transactional: omit List-Unsubscribe headers */
   transactional?: boolean;
 }
@@ -27,18 +27,24 @@ export async function sendEmail(
     html: input.html,
     text: input.text,
   };
-  if (!input.transactional) {
+  if (!input.transactional && input.unsubscribeUrl) {
     payload.headers = listUnsubscribeHeaders(env, input.unsubscribeUrl);
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "network_error" };
+  }
   const json = (await res.json().catch(() => ({}))) as {
     id?: string;
     message?: string;
