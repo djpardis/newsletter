@@ -36,7 +36,7 @@ Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `
 | `ADMIN_BEARER_TOKEN` | yes | Bearer token for admin endpoints |
 | `FROM_EMAIL` | yes | Sender address (`Name <email@domain>`) |
 | `BASE_URL` | yes | Public Worker URL (no trailing slash) |
-| `NOTIFY_EMAIL` | optional | Operator email to notify on each new confirmed subscriber |
+| `NOTIFY_EMAIL` | optional | Operator email notified when a subscriber row is created or an unsubscribed row is reactivated |
 | `RESEND_WEBHOOK_SECRET` | optional | Enables `/api/webhooks/resend` |
 | `TURNSTILE_SECRET_KEY` | optional | Requires Cloudflare Turnstile on subscribe |
 | `SITE_URL` | optional | Website URL for redirects and email links; falls back to `BASE_URL` |
@@ -46,6 +46,17 @@ Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `
 | `UNSUBSCRIBE_MAILTO` | optional | Mailto address for `List-Unsubscribe` header |
 
 See `.env.example` for a full checklist.
+
+## Subscriber notifications
+
+When `NOTIFY_EMAIL` is configured, the service sends a transactional operator
+email only after the `subscribers` table changes for a real subscriber record:
+
+- a new row is inserted (`subscribe_created`)
+- an existing unsubscribed row is reactivated (`subscribe_reactivated`)
+
+Invalid requests, honeypot submissions, already-active subscribers, and pending
+confirmation resends do not trigger operator notifications.
 
 ## API
 
@@ -69,6 +80,11 @@ npx tsx scripts/create-campaign.ts --md post.md --slug s --subject "..." --kind 
 npx tsx scripts/send-test-campaign.ts      # trigger POST /api/campaigns/test-send
 npx tsx scripts/send-campaign.ts           # trigger POST /api/campaigns/send (requires --reviewed)
 ```
+
+For campaigns, create a campaign row from reviewed Markdown first, send a one-off
+test with `send-test-campaign.ts`, then send the production campaign with
+`send-campaign.ts --reviewed`. Test sends do not update campaign delivery
+metrics, but active subscriber recipients still receive real unsubscribe links.
 
 ## Contributing & security
 
