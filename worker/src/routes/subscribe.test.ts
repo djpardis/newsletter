@@ -17,7 +17,7 @@ class MockStatement {
 
   async first<T>(): Promise<T | null> {
     if (this.sql.includes("FROM subscribers WHERE email = ?")) {
-      return null;
+      return this.db.existingSubscriber as T | null;
     }
     if (this.sql.includes("RETURNING hit_count")) {
       return { hit_count: 1 } as T;
@@ -44,6 +44,7 @@ class MockStatement {
 }
 
 class MockD1 {
+  existingSubscriber: { id: string; status: string } | null = null;
   readonly runs: Array<{ sql: string; args: unknown[] }> = [];
 
   prepare(sql: string): MockStatement {
@@ -112,6 +113,50 @@ describe("handleSubscribe", () => {
     expect(notifyPayload.subject).toBe("New subscriber: new@example.com");
     expect(notifyPayload.text).toContain("new@example.com just subscribed");
     expect(db.runs.some((r) => /INSERT INTO subscribers/i.test(r.sql))).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("schedules an operator notification when an unsubscribed address resubscribes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(JSON.stringify({ id: "email-1" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+    const db = new MockD1();
+    db.existingSubscriber = { id: "sub-1", status: "unsubscribed" };
+    const waits: Promise<unknown>[] = [];
+    const ctx = {
+      waitUntil(promise: Promise<unknown>) {
+        waits.push(promise);
+      },
+      passThroughOnException() {},
+    } as ExecutionContext;
+
+    const res = await handleSubscribe(
+      new Request("https://newsletter.example.com/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "returning@example.com", source: "test", website: "" }),
+      }),
+      envWithDb(db),
+      ctx,
+    );
+    await Promise.all(waits);
+
+    expect(res.status).toBe(200);
+    expect(waits).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const notifyPayload = JSON.parse(
+      (fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].body as string,
+    );
+    expect(notifyPayload.to).toEqual(["operator@example.com"]);
+    expect(notifyPayload.subject).toBe("New subscriber: returning@example.com");
+    expect(notifyPayload.text).toContain("returning@example.com just subscribed");
+    expect(db.runs.some((r) => /UPDATE subscribers SET/i.test(r.sql))).toBe(true);
     vi.unstubAllGlobals();
   });
 });

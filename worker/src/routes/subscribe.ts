@@ -131,7 +131,7 @@ export async function handleSubscribe(
   let subscriberId: string;
   let auditEvent: string;
   let auditPayload: Record<string, unknown> | null;
-  let createdSubscriberEmail: string | null = null;
+  let notifySubscriberEmail: string | null = null;
 
   if (existing) {
     subscriberId = existing.id;
@@ -155,6 +155,7 @@ export async function handleSubscribe(
         .run();
       auditEvent = "subscribe_reactivated";
       auditPayload = { from: existing.status };
+      notifySubscriberEmail = email;
     }
   } else {
     subscriberId = uuid();
@@ -168,15 +169,15 @@ export async function handleSubscribe(
       .run();
     auditEvent = "subscribe_created";
     auditPayload = null;
-    createdSubscriberEmail = email;
+    notifySubscriberEmail = email;
   }
 
   await rotateConfirmToken(env.DB, subscriberId, tokenHash, now);
   const sent = await sendConfirmEmail(env, email, plainToken);
   if (!sent.ok) return emailFailureResponse(sent.error);
 
-  if (createdSubscriberEmail) {
-    const notify = notifyNewSubscriber(env, createdSubscriberEmail);
+  if (notifySubscriberEmail) {
+    const notify = notifyNewSubscriber(env, notifySubscriberEmail);
     if (ctx) ctx.waitUntil(notify);
     else await notify;
   }
