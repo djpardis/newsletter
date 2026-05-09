@@ -37,6 +37,7 @@ Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `
 | `FROM_EMAIL` | yes | Sender address (`Name <email@domain>`) |
 | `BASE_URL` | yes | Public Worker URL (no trailing slash) |
 | `NOTIFY_EMAIL` | optional | Operator email notified when a subscriber row is created or an unsubscribed row is reactivated |
+| `DIGEST_EMAIL` | optional | Weekly operator digest recipient; falls back to `NOTIFY_EMAIL` |
 | `RESEND_WEBHOOK_SECRET` | optional | Enables `/api/webhooks/resend` |
 | `TURNSTILE_SECRET_KEY` | optional | Requires Cloudflare Turnstile on subscribe |
 | `SITE_URL` | optional | Website URL for redirects and email links; falls back to `BASE_URL` |
@@ -58,6 +59,21 @@ email only after the `subscribers` table changes for a real subscriber record:
 Invalid requests, honeypot submissions, already-active subscribers, and pending
 confirmation resends do not trigger operator notifications.
 
+## Weekly operator digest
+
+When `DIGEST_EMAIL` is configured, the scheduled Worker sends a plain-text
+transactional digest every Monday UTC. If `DIGEST_EMAIL` is unset, the digest
+uses `NOTIFY_EMAIL`; if neither is configured, no digest is sent.
+
+The digest summarizes the previous 7 days:
+
+- new subscriber rows and reactivated subscribers
+- unsubscribes, bounces, and complaints
+- net subscriber change and current status totals
+- campaigns sent with sent/failed delivery counts
+- top subscription sources
+- pending confirmations older than 48 hours
+
 ## API
 
 | Method | Path | Auth | Description |
@@ -70,6 +86,7 @@ confirmation resends do not trigger operator notifications.
 | `POST` | `/api/campaigns/test-send` | Bearer | Send one existing campaign to one test recipient |
 | `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |
 | `POST` | `/api/admin/delete` | Bearer | Hard-delete a subscriber (GDPR) |
+| `POST` | `/api/admin/weekly-digest/test-send` | Bearer | Send the weekly operator digest immediately |
 
 ## Scripts
 
