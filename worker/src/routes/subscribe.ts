@@ -50,6 +50,22 @@ async function sendConfirmEmail(
   });
 }
 
+function notifyNewSubscriber(
+  env: Env,
+  email: string,
+): Promise<void> {
+  if (!env.NOTIFY_EMAIL) return Promise.resolve();
+  return sendEmail(env, {
+    to: env.NOTIFY_EMAIL,
+    subject: `New subscriber: ${email}`,
+    text: `${email} just subscribed to ${env.SITE_NAME ?? "your newsletter"}.`,
+    html: `<p>${email} just subscribed to ${env.SITE_NAME ?? "your newsletter"}.</p>`,
+    transactional: true,
+  }).then((result) => {
+    if (!result.ok) console.error("notify_email_failed:", result.error);
+  }).catch(console.error);
+}
+
 function emailFailureResponse(detail: string): Response {
   return Response.json(
     { error: "email_send_failed", detail },
@@ -60,6 +76,7 @@ function emailFailureResponse(detail: string): Response {
 export async function handleSubscribe(
   request: Request,
   env: Env,
+  ctx?: ExecutionContext,
 ): Promise<Response> {
   const now = Date.now();
   const text = await request.text();
@@ -114,6 +131,7 @@ export async function handleSubscribe(
   let subscriberId: string;
   let auditEvent: string;
   let auditPayload: Record<string, unknown> | null;
+  let createdSubscriberEmail: string | null = null;
 
   if (existing) {
     subscriberId = existing.id;
@@ -150,11 +168,18 @@ export async function handleSubscribe(
       .run();
     auditEvent = "subscribe_created";
     auditPayload = null;
+    createdSubscriberEmail = email;
   }
 
   await rotateConfirmToken(env.DB, subscriberId, tokenHash, now);
   const sent = await sendConfirmEmail(env, email, plainToken);
   if (!sent.ok) return emailFailureResponse(sent.error);
+
+  if (createdSubscriberEmail) {
+    const notify = notifyNewSubscriber(env, createdSubscriberEmail);
+    if (ctx) ctx.waitUntil(notify);
+    else await notify;
+  }
 
   audit(env.DB, auditEvent, subscriberId, auditPayload, now).catch(console.error);
   return Response.json({ ok: true, state: "pending" });
