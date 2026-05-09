@@ -55,6 +55,24 @@ class MockD1 {
           source: "homepage",
           status: "active",
         },
+        {
+          email: "real.djpardis+test@gmail.com",
+          created_at: Date.UTC(2026, 4, 7, 16),
+          source: "homepage",
+          status: "active",
+        },
+        {
+          email: "realdjpardis@gmail.com",
+          created_at: Date.UTC(2026, 4, 8, 17),
+          source: "homepage",
+          status: "active",
+        },
+        {
+          email: "pending@example.com",
+          created_at: Date.UTC(2026, 4, 8, 18),
+          source: "homepage",
+          status: "pending",
+        },
       ] as T[];
     }
     if (sql.includes("subscribe_reactivated")) {
@@ -110,9 +128,7 @@ class MockD1 {
         },
       ] as T[];
     }
-    if (sql.includes("GROUP BY COALESCE")) {
-      return [{ source: "homepage", count: 1 }] as T[];
-    }
+    if (sql.includes("GROUP BY COALESCE")) return [{ source: "homepage", count: 4 }] as T[];
     return [] as T[];
   }
 
@@ -149,11 +165,15 @@ describe("weekly digest", () => {
     const text = renderWeeklyDigestText(env(), summary);
 
     expect(text).toContain("Example Newsletter weekly newsletter digest");
-    expect(text).toContain("New rows: 1");
+    expect(text).toContain("New rows: 4");
     expect(text).toContain("Reactivated: 1");
     expect(text).toContain("Unsubscribed: 1");
-    expect(text).toContain("Net change: +1");
+    expect(text).toContain("Net change: +4");
+    expect(text).toContain("Unique new active emails listed: 2");
     expect(text).toContain("new@example.com - active - homepage");
+    expect(text).toContain("realdjpardis@gmail.com - active - homepage");
+    expect(text).not.toContain("real.djpardis+test@gmail.com");
+    expect(text).not.toContain("pending@example.com");
     expect(text).toContain("returning@example.com");
     expect(text).toContain("old@example.com");
     expect(text).toContain("Weekly update (weekly-update) - 9 sent, 1 failed");
@@ -186,7 +206,7 @@ describe("weekly digest", () => {
     );
     expect(payload.to).toEqual(["digest@example.com"]);
     expect(payload.subject).toBe("Example Newsletter weekly digest");
-    expect(payload.text).toContain("New rows: 1");
+    expect(payload.text).toContain("New rows: 4");
     vi.unstubAllGlobals();
   });
 

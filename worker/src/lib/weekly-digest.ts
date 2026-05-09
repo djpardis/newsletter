@@ -73,6 +73,28 @@ function formatDateTime(ts: number): string {
   }).format(new Date(ts));
 }
 
+function canonicalEmail(email: string): string {
+  const lower = email.toLowerCase().trim();
+  const [local, domain] = lower.split("@");
+  if (!local || !domain) return lower;
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    return `${local.split("+")[0].replace(/\./g, "")}@${domain}`;
+  }
+  return lower;
+}
+
+function dedupeByCanonicalEmail(rows: EventWithEmail[]): EventWithEmail[] {
+  const latestByEmail = new Map<string, EventWithEmail>();
+  for (const row of rows) {
+    const key = canonicalEmail(row.email);
+    const existing = latestByEmail.get(key);
+    if (!existing || row.created_at > existing.created_at) {
+      latestByEmail.set(key, row);
+    }
+  }
+  return [...latestByEmail.values()].sort((a, b) => b.created_at - a.created_at);
+}
+
 function listSection<T>(
   title: string,
   rows: T[],
@@ -243,6 +265,11 @@ export function renderWeeklyDigestText(
   const reactivatedCount = summary.reactivatedSubscribers.length;
   const unsubCount = summary.unsubscribes.length;
   const netGrowth = newCount + reactivatedCount - unsubCount;
+  const uniqueNewActiveSubscribers = dedupeByCanonicalEmail(
+    summary.newSubscribers.filter((row) => row.status === "active"),
+  );
+  const uniqueReactivatedSubscribers = dedupeByCanonicalEmail(summary.reactivatedSubscribers);
+  const uniqueUnsubscribes = dedupeByCanonicalEmail(summary.unsubscribes);
   const lines = [
     `${brand} weekly newsletter digest`,
     `${formatDate(summary.start)} - ${formatDate(summary.end)}`,
@@ -252,6 +279,7 @@ export function renderWeeklyDigestText(
     `Reactivated: ${reactivatedCount}`,
     `Unsubscribed: ${unsubCount}`,
     `Net change: ${netGrowth >= 0 ? "+" : ""}${netGrowth}`,
+    `Unique new active emails listed: ${uniqueNewActiveSubscribers.length}`,
     `Active total: ${countStatus(summary, "active")}`,
     `Pending total: ${countStatus(summary, "pending")}`,
     `Unsubscribed total: ${countStatus(summary, "unsubscribed")}`,
@@ -259,20 +287,20 @@ export function renderWeeklyDigestText(
     `Complained total: ${countStatus(summary, "complained")}`,
     "",
     ...listSection(
-      "New subscriber rows",
-      summary.newSubscribers,
+      "New active subscriber emails",
+      uniqueNewActiveSubscribers,
       (row) => `${row.email} - ${row.status ?? "unknown"} - ${row.source ?? "unknown"} - ${formatDateTime(row.created_at)}`,
     ),
     "",
     ...listSection(
       "Reactivated subscribers",
-      summary.reactivatedSubscribers,
+      uniqueReactivatedSubscribers,
       (row) => `${row.email} - ${formatDateTime(row.created_at)}`,
     ),
     "",
     ...listSection(
       "Unsubscribes",
-      summary.unsubscribes,
+      uniqueUnsubscribes,
       (row) => `${row.email} - ${formatDateTime(row.created_at)}`,
     ),
     "",
