@@ -36,6 +36,7 @@ Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `
 | `ADMIN_BEARER_TOKEN` | yes | Bearer token for admin endpoints |
 | `FROM_EMAIL` | yes | Sender address (`Name <email@domain>`) |
 | `BASE_URL` | yes | Public Worker URL (no trailing slash) |
+| `NOTIFY_EMAIL` | optional | Operator email to notify on each new confirmed subscriber |
 | `RESEND_WEBHOOK_SECRET` | optional | Enables `/api/webhooks/resend` |
 | `TURNSTILE_SECRET_KEY` | optional | Requires Cloudflare Turnstile on subscribe |
 | `SITE_URL` | optional | Website URL for redirects and email links; falls back to `BASE_URL` |
