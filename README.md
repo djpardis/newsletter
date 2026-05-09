@@ -56,6 +56,7 @@ See `.env.example` for a full checklist.
 | `GET` | `/api/confirm` | — | Double opt-in confirmation |
 | `GET`, `POST` | `/api/unsubscribe` | — | One-click unsubscribe (RFC 8058) |
 | `POST` | `/api/campaigns/send` | Bearer | Enqueue campaign to active subscribers |
+| `POST` | `/api/campaigns/test-send` | Bearer | Send one existing campaign to one test recipient |
 | `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |
 | `POST` | `/api/admin/delete` | Bearer | Hard-delete a subscriber (GDPR) |
 
@@ -65,7 +66,8 @@ See `.env.example` for a full checklist.
 npx tsx scripts/import-csv.ts <file.csv>   # import email[,status]
 npx tsx scripts/export-csv.ts              # export subscribers as CSV
 npx tsx scripts/create-campaign.ts --md post.md --slug s --subject "..." --kind manual
-npx tsx scripts/send-campaign.ts           # trigger POST /api/campaigns/send
+npx tsx scripts/send-test-campaign.ts      # trigger POST /api/campaigns/test-send
+npx tsx scripts/send-campaign.ts           # trigger POST /api/campaigns/send (requires --reviewed)
 ```
 
 ## Contributing & security

@@ -6,7 +6,7 @@ import { handleAdminDelete } from "./routes/admin.js";
 import { handleSubscribe } from "./routes/subscribe.js";
 import { handleConfirm } from "./routes/confirm.js";
 import { handleUnsubscribe } from "./routes/unsubscribe.js";
-import { handleCampaignSend } from "./routes/campaigns.js";
+import { handleCampaignSend, handleCampaignTestSend } from "./routes/campaigns.js";
 import { handleResendWebhook } from "./routes/webhooks.js";
 import { health } from "./routes/health.js";
 
@@ -56,6 +56,10 @@ export default {
 
       if (request.method === "POST" && path === "/api/campaigns/send") {
         return handleCampaignSend(request, env);
+      }
+
+      if (request.method === "POST" && path === "/api/campaigns/test-send") {
+        return handleCampaignTestSend(request, env);
       }
 
       if (request.method === "POST" && path === "/api/webhooks/resend") {
