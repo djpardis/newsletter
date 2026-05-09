@@ -28,6 +28,11 @@ export interface Env {
   DEPLOY_SHA?: string;
   /** Cloudflare Rate Limiting binding for /api/subscribe */
   SUBSCRIBE_RATE_LIMITER?: { limit(opts: { key: string }): Promise<{ success: boolean }> };
+  /**
+   * Operator email to notify on each new confirmed subscriber.
+   * Fire-and-forget — delivery failure does not affect the subscriber.
+   */
+  NOTIFY_EMAIL?: string;
   /** Cloudflare Queue for async campaign sends */
   SEND_QUEUE?: Queue<SendMessage>;
 }

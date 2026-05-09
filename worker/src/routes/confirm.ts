@@ -1,6 +1,7 @@
 import type { Env } from "../types.js";
 import { audit } from "../lib/audit.js";
 import { sha256Hex, randomTokenHex } from "../lib/crypto.js";
+import { sendEmail } from "../lib/resend.js";
 import { confirmOkPage } from "../lib/templates.js";
 
 export async function handleConfirm(
@@ -50,6 +51,17 @@ export async function handleConfirm(
   ]);
 
   audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now).catch(console.error);
+
+  if (env.NOTIFY_EMAIL) {
+    sendEmail(env, {
+      to: env.NOTIFY_EMAIL,
+      subject: `New subscriber: ${row.email}`,
+      text: `${row.email} just confirmed their subscription to ${env.SITE_NAME ?? "your newsletter"}.`,
+      html: `<p>${row.email} just confirmed their subscription to ${env.SITE_NAME ?? "your newsletter"}.</p>`,
+      transactional: true,
+    }).catch(console.error);
+  }
+
   return new Response(confirmOkPage(env), {
     status: 200,
     headers: { "content-type": "text/html; charset=utf-8" },
