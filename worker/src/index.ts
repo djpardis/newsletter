@@ -33,7 +33,7 @@ export default {
           return withCors(env, request, new Response(null, { status: 204 }));
         }
         if (request.method === "POST") {
-          const res = await handleSubscribe(request, env);
+          const res = await handleSubscribe(request, env, ctx);
           return withCors(env, request, res);
         }
         return withCors(
@@ -44,7 +44,7 @@ export default {
       }
 
       if (request.method === "GET" && path === "/api/confirm") {
-        return handleConfirm(request, env, ctx);
+        return handleConfirm(request, env);
       }
 
       if (path === "/api/unsubscribe") {

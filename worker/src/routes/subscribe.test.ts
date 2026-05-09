@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Env } from "../types.js";
-import { sha256Hex } from "../lib/crypto.js";
-import { handleConfirm } from "./confirm.js";
+import { handleSubscribe } from "./subscribe.js";
 
 class MockStatement {
   private args: unknown[] = [];
@@ -17,8 +16,11 @@ class MockStatement {
   }
 
   async first<T>(): Promise<T | null> {
-    if (this.sql.includes("FROM verification_tokens")) {
-      return this.db.confirmRow as T | null;
+    if (this.sql.includes("FROM subscribers WHERE email = ?")) {
+      return null;
+    }
+    if (this.sql.includes("RETURNING hit_count")) {
+      return { hit_count: 1 } as T;
     }
     return null;
   }
@@ -42,7 +44,6 @@ class MockStatement {
 }
 
 class MockD1 {
-  confirmRow: unknown = null;
   readonly runs: Array<{ sql: string; args: unknown[] }> = [];
 
   prepare(sql: string): MockStatement {
@@ -66,8 +67,8 @@ function envWithDb(db: MockD1): Env {
   };
 }
 
-describe("handleConfirm", () => {
-  it("schedules an operator notification email when a subscriber confirms", async () => {
+describe("handleSubscribe", () => {
+  it("schedules an operator notification when a new subscriber row is created", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -78,16 +79,6 @@ describe("handleConfirm", () => {
       ),
     );
     const db = new MockD1();
-    const token = "plain-token";
-    db.confirmRow = {
-      vt_id: "vt-1",
-      subscriber_id: "sub-1",
-      expires_at: Date.now() + 100_000,
-      used_at: null,
-      email: "new@example.com",
-      status: "pending",
-      token_hash: await sha256Hex(token),
-    };
     const waits: Promise<unknown>[] = [];
     const ctx = {
       waitUntil(promise: Promise<unknown>) {
@@ -96,8 +87,12 @@ describe("handleConfirm", () => {
       passThroughOnException() {},
     } as ExecutionContext;
 
-    const res = await handleConfirm(
-      new Request(`https://newsletter.example.com/api/confirm?token=${token}`),
+    const res = await handleSubscribe(
+      new Request("https://newsletter.example.com/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "new@example.com", source: "test", website: "" }),
+      }),
       envWithDb(db),
       ctx,
     );
@@ -105,13 +100,18 @@ describe("handleConfirm", () => {
 
     expect(res.status).toBe(200);
     expect(waits).toHaveLength(1);
-    expect(fetch).toHaveBeenCalledOnce();
-    const payload = JSON.parse(
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const confirmPayload = JSON.parse(
       (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string,
     );
-    expect(payload.to).toEqual(["operator@example.com"]);
-    expect(payload.subject).toBe("New subscriber: new@example.com");
-    expect(payload.text).toContain("new@example.com just confirmed");
+    const notifyPayload = JSON.parse(
+      (fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].body as string,
+    );
+    expect(confirmPayload.to).toEqual(["new@example.com"]);
+    expect(notifyPayload.to).toEqual(["operator@example.com"]);
+    expect(notifyPayload.subject).toBe("New subscriber: new@example.com");
+    expect(notifyPayload.text).toContain("new@example.com just subscribed");
+    expect(db.runs.some((r) => /INSERT INTO subscribers/i.test(r.sql))).toBe(true);
     vi.unstubAllGlobals();
   });
 });
