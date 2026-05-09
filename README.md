@@ -28,23 +28,23 @@ Full deployment checklist: [`DEPLOYING.md`](DEPLOYING.md).
 
 ## Configuration
 
-Set secrets with `npx wrangler secret put <NAME>`. Set vars in `wrangler.toml` `[vars]`.
+Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NAME>`) or **Variables** (`wrangler.toml` `[vars]` / dashboard). Runtime behavior is the same; Secrets stay out of tracked config. Keys and tokens should be Secrets; URLs and branding are often Variables—you can still put any name in Secrets if you prefer.
 
-| Name | Required | Purpose |
-|------|----------|---------|
-| `RESEND_API_KEY` | yes | Resend API key |
-| `ADMIN_BEARER_TOKEN` | yes | Bearer token for admin endpoints |
-| `FROM_EMAIL` | yes | Sender address (`Name <email@domain>`) |
-| `BASE_URL` | yes | Public Worker URL (no trailing slash) |
-| `NOTIFY_EMAIL` | optional | Operator email notified when a subscriber row is created or an unsubscribed row is reactivated |
-| `DIGEST_EMAIL` | optional | Weekly operator digest recipient; falls back to `NOTIFY_EMAIL` |
-| `RESEND_WEBHOOK_SECRET` | optional | Enables `/api/webhooks/resend` |
-| `TURNSTILE_SECRET_KEY` | optional | Requires Cloudflare Turnstile on subscribe |
-| `SITE_URL` | optional | Website URL for redirects and email links; falls back to `BASE_URL` |
-| `CORS_ORIGIN` | optional | Allowed origin for `/api/subscribe` |
-| `SITE_NAME` | optional | Brand name in emails (default: `Newsletter`) |
-| `COMPANY_ADDRESS` | optional | Postal line in campaign footers (CAN-SPAM/CASL) |
-| `UNSUBSCRIBE_MAILTO` | optional | Mailto address for `List-Unsubscribe` header |
+| Name | Required | Set with | Purpose |
+|------|----------|----------|---------|
+| `RESEND_API_KEY` | yes | `secret put` | Resend API key |
+| `ADMIN_BEARER_TOKEN` | yes | `secret put` | Bearer token for admin endpoints |
+| `FROM_EMAIL` | yes | `[vars]` | Sender address (`Name <email@domain>`) |
+| `BASE_URL` | yes | `[vars]` | Public Worker URL (no trailing slash) |
+| `NOTIFY_EMAIL` | optional | `[vars]` | Operator email notified when a subscriber row is created or an unsubscribed row is reactivated |
+| `DIGEST_EMAIL` | optional | `[vars]` | Weekly operator digest recipient; falls back to `NOTIFY_EMAIL` |
+| `RESEND_WEBHOOK_SECRET` | optional | `secret put` | Enables `/api/webhooks/resend` |
+| `TURNSTILE_SECRET_KEY` | optional | `secret put` | Requires Cloudflare Turnstile on subscribe |
+| `SITE_URL` | optional | `[vars]` | Website URL for redirects and email links; falls back to `BASE_URL` |
+| `CORS_ORIGIN` | optional | `[vars]` | Allowed origin for `/api/subscribe` |
+| `SITE_NAME` | optional | `[vars]` | Brand name in emails (default: `Newsletter`) |
+| `COMPANY_ADDRESS` | optional | `[vars]` | Postal line in campaign footers (CAN-SPAM/CASL) |
+| `UNSUBSCRIBE_MAILTO` | optional | `[vars]` | Mailto address for `List-Unsubscribe` header |
 
 See `.env.example` for a full checklist.
 
