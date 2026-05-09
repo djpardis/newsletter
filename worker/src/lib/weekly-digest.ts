@@ -95,6 +95,10 @@ function dedupeByCanonicalEmail(rows: EventWithEmail[]): EventWithEmail[] {
   return [...latestByEmail.values()].sort((a, b) => b.created_at - a.created_at);
 }
 
+function digestEmail(email: string): string {
+  return canonicalEmail(email);
+}
+
 function listSection<T>(
   title: string,
   rows: T[],
@@ -289,19 +293,19 @@ export function renderWeeklyDigestText(
     ...listSection(
       "New active subscriber emails",
       uniqueNewActiveSubscribers,
-      (row) => `${row.email} - ${row.status ?? "unknown"} - ${row.source ?? "unknown"} - ${formatDateTime(row.created_at)}`,
+      (row) => `${digestEmail(row.email)} - ${row.status ?? "unknown"} - ${row.source ?? "unknown"} - ${formatDateTime(row.created_at)}`,
     ),
     "",
     ...listSection(
       "Reactivated subscribers",
       uniqueReactivatedSubscribers,
-      (row) => `${row.email} - ${formatDateTime(row.created_at)}`,
+      (row) => `${digestEmail(row.email)} - ${formatDateTime(row.created_at)}`,
     ),
     "",
     ...listSection(
       "Unsubscribes",
       uniqueUnsubscribes,
-      (row) => `${row.email} - ${formatDateTime(row.created_at)}`,
+      (row) => `${digestEmail(row.email)} - ${formatDateTime(row.created_at)}`,
     ),
     "",
     "Campaigns",
@@ -353,7 +357,7 @@ export async function sendWeeklyDigest(
   const text = renderWeeklyDigestText(env, summary);
   const result = await sendEmail(env, {
     to,
-    subject: `${env.SITE_NAME ?? "Newsletter"} weekly digest`,
+    subject: `${env.SITE_NAME ?? "Newsletter"} (${formatDate(summary.start)} - ${formatDate(summary.end)})`,
     text,
     transactional: true,
   });
