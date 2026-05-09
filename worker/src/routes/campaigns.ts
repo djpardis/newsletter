@@ -4,7 +4,7 @@ import { audit } from "../lib/audit.js";
 import { uuid } from "../lib/crypto.js";
 import { sendEmail } from "../lib/resend.js";
 import { baseUrl, campaignEmail } from "../lib/templates.js";
-import { parseJsonBody } from "../lib/validation.js";
+import { normalizeEmail as normalizeAddress, parseJsonBody } from "../lib/validation.js";
 
 const CHUNK = 4; // stay safely under Resend's 5 req/sec limit
 const CHUNK_DELAY_MS = 1100; // ~1 second between chunks
@@ -13,7 +13,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function normalizeEmail(email: string): string {
+function canonicalEmail(email: string): string {
   const lower = email.toLowerCase().trim();
   const [local, domain] = lower.split("@");
   if (!local || !domain) return lower;
@@ -101,7 +101,7 @@ export async function handleCampaignSend(
   // Deduplicate by canonical email so Gmail +alias addresses don't get multiple copies
   const seen = new Set<string>();
   const rows = (subs.results ?? []).filter((sub) => {
-    const key = normalizeEmail(sub.email);
+    const key = canonicalEmail(sub.email);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -175,5 +175,84 @@ export async function handleCampaignSend(
     recipients: rows.length,
     sent,
     failed,
+  });
+}
+
+export async function handleCampaignTestSend(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  if (!authorizeBearer(request, env.ADMIN_BEARER_TOKEN)) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const raw = await request.text();
+  const body = parseJsonBody(raw);
+  if (!body) return Response.json({ error: "invalid_json" }, { status: 400 });
+
+  const campaignId =
+    typeof body.campaign_id === "string" ? body.campaign_id.trim() : "";
+  const email = normalizeAddress(body.email);
+  if (!campaignId || !email) {
+    return Response.json({ error: "invalid_payload" }, { status: 400 });
+  }
+
+  const campaign = await env.DB.prepare(
+    `SELECT id, subject, html_body, text_body FROM campaigns WHERE id = ?`,
+  )
+    .bind(campaignId)
+    .first<{
+      id: string;
+      subject: string;
+      html_body: string;
+      text_body: string;
+    }>();
+
+  if (!campaign) return Response.json({ error: "campaign_not_found" }, { status: 404 });
+
+  const sub = await env.DB.prepare(
+    `SELECT id, email, unsubscribe_token FROM subscribers
+     WHERE email = ? AND status = 'active' AND unsubscribe_token IS NOT NULL`,
+  )
+    .bind(email)
+    .first<{
+      id: string;
+      email: string;
+      unsubscribe_token: string;
+    }>();
+
+  const unsubscribeKind = sub ? "real" : "preview";
+  const unsubUrl = sub
+    ? `${baseUrl(env)}/api/unsubscribe?token=${encodeURIComponent(sub.unsubscribe_token)}`
+    : `${baseUrl(env)}/api/unsubscribe?token=PREVIEW`;
+  const tpl = campaignEmail(env, campaign.html_body, campaign.text_body, unsubUrl);
+  const sent = await sendEmail(env, {
+    to: email,
+    subject: campaign.subject,
+    html: tpl.html,
+    text: tpl.text,
+    unsubscribeUrl: unsubUrl,
+  });
+
+  if (!sent.ok) {
+    return Response.json(
+      { error: "email_send_failed", detail: sent.error },
+      { status: 502 },
+    );
+  }
+
+  audit(env.DB, "campaign_test_sent", sub?.id ?? null, {
+    campaign_id: campaign.id,
+    email,
+    unsubscribe: unsubscribeKind,
+    provider_message_id: sent.id,
+  }, Date.now()).catch(console.error);
+
+  return Response.json({
+    ok: true,
+    campaign_id: campaign.id,
+    email,
+    unsubscribe: unsubscribeKind,
+    provider_message_id: sent.id,
   });
 }

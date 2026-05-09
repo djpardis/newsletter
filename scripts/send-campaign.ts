@@ -10,6 +10,10 @@ function arg(name: string): string | undefined {
   return process.argv[i + 1];
 }
 
+function hasFlag(name: string): boolean {
+  return process.argv.includes(name);
+}
+
 async function main() {
   const base = process.env.NEWSLETTER_API_URL?.replace(/\/$/, "");
   const token = process.env.ADMIN_BEARER_TOKEN;
@@ -21,6 +25,10 @@ async function main() {
   const id = arg("--id");
   if (!id) {
     console.error("Provide --id. Create and review campaigns before sending.");
+    process.exit(1);
+  }
+  if (!hasFlag("--reviewed")) {
+    console.error("Refusing full-list send without --reviewed. Test-send and review the campaign first.");
     process.exit(1);
   }
 
@@ -41,3 +49,5 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+export {};
