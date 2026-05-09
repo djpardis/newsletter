@@ -56,13 +56,13 @@ class MockD1 {
           status: "active",
         },
         {
-          email: "real.djpardis+test@gmail.com",
+          email: "sample.user+test@gmail.com",
           created_at: Date.UTC(2026, 4, 8, 18),
           source: "homepage",
           status: "active",
         },
         {
-          email: "realdjpardis@gmail.com",
+          email: "sampleuser@gmail.com",
           created_at: Date.UTC(2026, 4, 7, 17),
           source: "homepage",
           status: "active",
@@ -171,8 +171,8 @@ describe("weekly digest", () => {
     expect(text).toContain("Net change: +4");
     expect(text).toContain("Unique new active emails listed: 2");
     expect(text).toContain("new@example.com - active - homepage");
-    expect(text).toContain("realdjpardis@gmail.com - active - homepage");
-    expect(text).not.toContain("real.djpardis+test@gmail.com");
+    expect(text).toContain("sampleuser@gmail.com - active - homepage");
+    expect(text).not.toContain("sample.user+test@gmail.com");
     expect(text).not.toContain("pending@example.com");
     expect(text).toContain("returning@example.com");
     expect(text).toContain("old@example.com");

@@ -1,0 +1,14 @@
+---
+description: Keep public docs and examples free of real personal identifiers
+alwaysApply: true
+---
+
+# Public Docs and Examples
+
+This repo is intended to be used as an open-source library.
+
+- Never put real personal emails, subscriber addresses, API keys, bearer tokens, webhook secrets, account IDs, or operator-only values in public files.
+- Public examples must use reserved placeholders such as `user@example.com`, `operator@example.com`, `hello@yourdomain.com`, `<YOUR_TOKEN>`, or `00000000-0000-4000-8000-000000000000`.
+- Do not copy values from local runbooks, Cloudflare, Resend, production databases, inboxes, or terminal output into docs, tests, comments, or examples.
+- Before committing docs, examples, tests, or config templates, scan the diff for real identifiers and replace them with generic placeholders.
+- Run `npm run check:public-identifiers` before pushing changes that touch docs, tests, examples, scripts, or config templates. This check covers non-placeholder emails, common secret formats, long token-looking strings, UUIDs, and local filesystem paths.

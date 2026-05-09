@@ -77,10 +77,8 @@ The digest summarizes the previous 7 days:
 - top subscription sources
 - pending confirmations older than 48 hours
 
-Subscriber lists are deduped and rendered with canonical email addresses where
-possible. For Gmail/Googlemail addresses, dots and `+tag` aliases are collapsed
-for display, so `djpardis.official+confirmtest4@gmail.com` appears as
-`djpardisofficial@gmail.com`.
+Subscriber lists are deduped for display. Gmail and Googlemail addresses are
+shown in canonical form by removing dots and `+tag` aliases from the local part.
 
 ## API
 
