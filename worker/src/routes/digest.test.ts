@@ -96,7 +96,7 @@ describe("handleWeeklyDigestTestSend", () => {
       (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string,
     );
     expect(payload.to).toEqual(["digest@example.com"]);
-    expect(payload.subject).toBe("Example Newsletter weekly digest");
+    expect(payload.subject).toMatch(/^Example Newsletter \([A-Z][a-z]{2} \d{1,2}, \d{4} - [A-Z][a-z]{2} \d{1,2}, \d{4}\)$/);
   });
 
   it("returns a clear error when no recipient is configured", async () => {

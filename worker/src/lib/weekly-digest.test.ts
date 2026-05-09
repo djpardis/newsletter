@@ -57,19 +57,19 @@ class MockD1 {
         },
         {
           email: "real.djpardis+test@gmail.com",
-          created_at: Date.UTC(2026, 4, 7, 16),
+          created_at: Date.UTC(2026, 4, 8, 18),
           source: "homepage",
           status: "active",
         },
         {
           email: "realdjpardis@gmail.com",
-          created_at: Date.UTC(2026, 4, 8, 17),
+          created_at: Date.UTC(2026, 4, 7, 17),
           source: "homepage",
           status: "active",
         },
         {
           email: "pending@example.com",
-          created_at: Date.UTC(2026, 4, 8, 18),
+          created_at: Date.UTC(2026, 4, 8, 19),
           source: "homepage",
           status: "pending",
         },
@@ -205,7 +205,7 @@ describe("weekly digest", () => {
       (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string,
     );
     expect(payload.to).toEqual(["digest@example.com"]);
-    expect(payload.subject).toBe("Example Newsletter weekly digest");
+    expect(payload.subject).toBe("Example Newsletter (May 4, 2026 - May 11, 2026)");
     expect(payload.text).toContain("New rows: 4");
     vi.unstubAllGlobals();
   });
