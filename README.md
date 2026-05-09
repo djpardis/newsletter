@@ -65,14 +65,22 @@ When `DIGEST_EMAIL` is configured, the scheduled Worker sends a plain-text
 transactional digest every Monday UTC. If `DIGEST_EMAIL` is unset, the digest
 uses `NOTIFY_EMAIL`; if neither is configured, no digest is sent.
 
+Digest subjects use the site name and reporting window:
+`<Site Name> (<Start date> - <End date>)`.
+
 The digest summarizes the previous 7 days:
 
-- new subscriber rows and reactivated subscribers
+- new active subscriber emails and reactivated subscribers
 - unsubscribes, bounces, and complaints
 - net subscriber change and current status totals
 - campaigns sent with sent/failed delivery counts
 - top subscription sources
 - pending confirmations older than 48 hours
+
+Subscriber lists are deduped and rendered with canonical email addresses where
+possible. For Gmail/Googlemail addresses, dots and `+tag` aliases are collapsed
+for display, so `djpardis.official+confirmtest4@gmail.com` appears as
+`djpardisofficial@gmail.com`.
 
 ## API
 
