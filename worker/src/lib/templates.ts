@@ -50,13 +50,13 @@ function okPageShell(title: string, heading: string, body: string, _env: Env): s
 export function confirmOkPage(env: Env): string {
   const site = siteUrl(env);
   const name = escapeHtml(brandName(env));
-  return okPageShell("Confirmed!", "Confirmed!", `Thank you for subscribing to <a href="${site}">${name}</a>.`, env);
+  return okPageShell("Confirmed", "Confirmed", `Thank you for subscribing to <a href="${site}">${name}</a>.`, env);
 }
 
 export function unsubscribedPage(env: Env): string {
   const site = siteUrl(env);
   const name = escapeHtml(brandName(env));
-  return okPageShell("Unsubscribed!", "You're unsubscribed!", `You won't receive any further emails from <a href="${site}">${name}</a>.`, env);
+  return okPageShell("Unsubscribed", "Unsubscribed", `You won't receive any further emails from <a href="${site}">${name}</a>.`, env);
 }
 
 export function campaignEmail(
