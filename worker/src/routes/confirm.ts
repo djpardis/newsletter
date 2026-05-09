@@ -7,6 +7,7 @@ import { confirmOkPage } from "../lib/templates.js";
 export async function handleConfirm(
   request: Request,
   env: Env,
+  ctx?: ExecutionContext,
 ): Promise<Response> {
   const url = new URL(request.url);
   const raw = url.searchParams.get("token") ?? "";
@@ -53,13 +54,17 @@ export async function handleConfirm(
   audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now).catch(console.error);
 
   if (env.NOTIFY_EMAIL) {
-    sendEmail(env, {
+    const notify = sendEmail(env, {
       to: env.NOTIFY_EMAIL,
       subject: `New subscriber: ${row.email}`,
       text: `${row.email} just confirmed their subscription to ${env.SITE_NAME ?? "your newsletter"}.`,
       html: `<p>${row.email} just confirmed their subscription to ${env.SITE_NAME ?? "your newsletter"}.</p>`,
       transactional: true,
+    }).then((result) => {
+      if (!result.ok) console.error("notify_email_failed:", result.error);
     }).catch(console.error);
+    if (ctx) ctx.waitUntil(notify);
+    else await notify;
   }
 
   return new Response(confirmOkPage(env), {

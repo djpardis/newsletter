@@ -14,7 +14,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    _ctx: ExecutionContext,
+    ctx: ExecutionContext,
   ): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -44,7 +44,7 @@ export default {
       }
 
       if (request.method === "GET" && path === "/api/confirm") {
-        return handleConfirm(request, env);
+        return handleConfirm(request, env, ctx);
       }
 
       if (path === "/api/unsubscribe") {

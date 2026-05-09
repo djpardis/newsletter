@@ -93,12 +93,19 @@ describe("confirmation pages", () => {
 
   it("does not show a top brand label on the subscribe confirmation page", () => {
     const html = confirmOkPage(env);
+    expect(html).toContain("<title>Confirmed</title>");
+    expect(html).toContain("<h1>Confirmed</h1>");
+    expect(html).not.toContain("Confirmed!");
     expect(html).toContain('Thank you for subscribing to <a href="https://example.com">Vance Refrigeration</a>.');
     expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
   });
 
   it("does not show a top brand label on the unsubscribe confirmation page", () => {
     const html = unsubscribedPage(env);
+    expect(html).toContain("<title>Unsubscribed</title>");
+    expect(html).toContain("<h1>Unsubscribed</h1>");
+    expect(html).not.toContain("Unsubscribed!");
+    expect(html).not.toContain("You're unsubscribed!");
     expect(html).toContain('You won\'t receive any further emails from <a href="https://example.com">Vance Refrigeration</a>.');
     expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
   });
