@@ -1,6 +1,6 @@
 # newsletter
 
-Golden Gate Bridge from Fort Point
+![](assets/hero.png)
 
 Newsletter backend that runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/), stores subscribers in [D1](https://developers.cloudflare.com/d1/), and sends via [Resend](https://resend.com/). Supports double opt-in, [RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058) one-click unsubscribe, automatic bounce and complaint suppression, and plain-text-first campaign delivery through [Cloudflare Queues](https://developers.cloudflare.com/queues/).
 
@@ -121,3 +121,4 @@ metrics, but active subscriber recipients still receive real unsubscribe links.
 - Deployment: `[DEPLOYING.md](DEPLOYING.md)`
 - Security disclosures: `[SECURITY.md](SECURITY.md)`
 - License: [MIT](LICENSE)
+
