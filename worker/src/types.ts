@@ -24,15 +24,14 @@ export interface Env {
   SITE_URL?: string;
   /** Short tagline shown after the sender signature in emails (e.g. "Boring on purpose."). */
   SITE_TAGLINE?: string;
+  /** Optional recipient for weekly operator digest. Falls back to NOTIFY_EMAIL when unset. */
+  DIGEST_EMAIL?: string;
+  /** Operator email for subscriber notifications and digest fallback. */
+  NOTIFY_EMAIL?: string;
   /** Git SHA injected at deploy time via --var DEPLOY_SHA:$(git rev-parse --short HEAD) */
   DEPLOY_SHA?: string;
   /** Cloudflare Rate Limiting binding for /api/subscribe */
   SUBSCRIBE_RATE_LIMITER?: { limit(opts: { key: string }): Promise<{ success: boolean }> };
-  /**
-   * Operator email to notify on each new confirmed subscriber.
-   * Fire-and-forget — delivery failure does not affect the subscriber.
-   */
-  NOTIFY_EMAIL?: string;
   /** Cloudflare Queue for async campaign sends */
   SEND_QUEUE?: Queue<SendMessage>;
 }
