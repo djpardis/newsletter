@@ -45,6 +45,22 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 
 See `.env.example` for a checklist.
 
+## HTTP API
+
+Public routes on your Worker (`BASE_URL`). Subscriber flows use token links; admin routes need `Authorization: Bearer <ADMIN_BEARER_TOKEN>`.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/health` | — | Liveness check |
+| `POST` | `/api/subscribe` | — | Subscribe; see [examples/](examples/) |
+| `GET` | `/api/confirm` | — | Double opt-in confirmation |
+| `GET`, `POST` | `/api/unsubscribe` | — | One-click unsubscribe ([RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058)) |
+| `POST` | `/api/campaigns/send` | Bearer | Enqueue campaign to active subscribers |
+| `POST` | `/api/campaigns/test-send` | Bearer | Send one campaign to one test recipient |
+| `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |
+| `POST` | `/api/admin/delete` | Bearer | Hard-delete a subscriber (GDPR) |
+| `POST` | `/api/admin/weekly-digest/test-send` | Bearer | Send the weekly operator digest immediately |
+
 ## Subscriber notifications
 
 When `NOTIFY_EMAIL` is configured, the Worker sends a transactional operator email only when the `subscribers` table changes for a real record:
