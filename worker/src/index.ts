@@ -9,6 +9,8 @@ import { handleUnsubscribe } from "./routes/unsubscribe.js";
 import { handleCampaignSend, handleCampaignTestSend } from "./routes/campaigns.js";
 import { handleResendWebhook } from "./routes/webhooks.js";
 import { health } from "./routes/health.js";
+import { sendWeeklyDigest, shouldSendWeeklyDigest } from "./lib/weekly-digest.js";
+import { handleWeeklyDigestTestSend } from "./routes/digest.js";
 
 export default {
   async fetch(
@@ -70,6 +72,10 @@ export default {
         return handleAdminDelete(request, env);
       }
 
+      if (request.method === "POST" && path === "/api/admin/weekly-digest/test-send") {
+        return handleWeeklyDigestTestSend(request, env);
+      }
+
       return new Response("Not Found", { status: 404 });
     } catch (e) {
       console.error(e);
@@ -77,13 +83,22 @@ export default {
     }
   },
 
-  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(
       runCleanup(env).then(
         (s) => console.log("cleanup:", JSON.stringify(s)),
         (e) => console.error("cleanup_failed:", e),
       ),
     );
+
+    if (shouldSendWeeklyDigest(event.scheduledTime)) {
+      ctx.waitUntil(
+        sendWeeklyDigest(env, event.scheduledTime).then(
+          (s) => console.log("weekly_digest:", JSON.stringify(s)),
+          (e) => console.error("weekly_digest_failed:", e),
+        ),
+      );
+    }
   },
 
   async queue(batch: MessageBatch<SendMessage>, env: Env): Promise<void> {
