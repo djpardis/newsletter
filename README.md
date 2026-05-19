@@ -1,28 +1,28 @@
 # newsletter
 
-[![CI](https://github.com/djpardis/newsletter/actions/workflows/ci.yml/badge.svg)](https://github.com/djpardis/newsletter/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
 <p align="center">
   <img src="assets/hero.png" width="560" alt="" />
 </p>
 
-A small HTTP API for running your own mailing list: double opt-in signups, one-click unsubscribe, campaign delivery, and bounce handling. Runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/) with subscribers in [D1](https://developers.cloudflare.com/d1/) and email via [Resend](https://resend.com/).
+A small HTTP API for running your own mailing list: double opt-in signups, one-click unsubscribe, campaign delivery, and bounce handling. The Worker runs on [Cloudflare](https://developers.cloudflare.com/workers/); subscriber and campaign state live in [D1](https://developers.cloudflare.com/d1/); outbound mail goes through [Resend](https://resend.com/).
+
+[![CI](https://github.com/djpardis/newsletter/actions/workflows/ci.yml/badge.svg)](https://github.com/djpardis/newsletter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## Requirements
 
-- **Node** 20 or newer (for Wrangler and scripts)
-- **Cloudflare** account with Workers, D1, and Queues — [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
+- **Node** 20 or newer, for Wrangler and the campaign scripts
+- **Cloudflare** account with Workers, D1, and Queues, plus the [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
 - **Resend** account with a [verified sending domain](https://resend.com/docs/dashboard/domains/introduction)
 
 ## What to know before you start
 
-- **No web UI.** You configure the Worker, call HTTP endpoints, and use CLI scripts. Signup forms live on your own site ([examples/](examples/)).
-- **Campaign sends are async.** `POST /api/campaigns/send` enqueues delivery; there is no per-recipient confirmation in that response.
-- **No open or click tracking.** Bounces and complaints are handled via Resend webhooks when configured.
+- **No web UI.** Deploy with Wrangler, run list operations through the Bearer-protected HTTP API or the TypeScript scripts in `scripts/`, and implement signup on your site ([examples/](examples/)).
+- **Campaign sends are async.** `POST /api/campaigns/send` queues delivery and responds right away with how many recipients were queued. It does not wait for Resend to accept or deliver each message.
+- **No open or click tracking.** Opens and clicks are not tracked. Bounces and complaints update subscriber status in D1 only when Resend webhooks are enabled.
 - **You own the list.** Subscriber data stays in your D1 database under your Cloudflare account.
 
-Full install, env vars, API reference, and scripts: [SETUP.md](SETUP.md). Production deploy: [DEPLOYING.md](DEPLOYING.md).
+Install, configuration, the HTTP API, and scripts: [SETUP.md](SETUP.md). Production deploy and webhooks: [DEPLOYING.md](DEPLOYING.md).
 
 ## Contributing and security
 
