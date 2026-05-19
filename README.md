@@ -1,7 +1,7 @@
 # newsletter
 
 <p align="center">
-  <img src="assets/hero.png" width="640" alt="" />
+  <img src="assets/hero.png" width="560" alt="" />
 </p>
 
 Newsletter backend that runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/), stores subscribers in [D1](https://developers.cloudflare.com/d1/), and sends via [Resend](https://resend.com/). Supports double opt-in, [RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058) one-click unsubscribe, automatic bounce and complaint suppression, and plain-text-first campaign delivery through [Cloudflare Queues](https://developers.cloudflare.com/queues/).
