@@ -7,7 +7,8 @@
     "deploy": "wrangler deploy --var DEPLOY_SHA:$(git rev-parse --short HEAD)",
     "test": "vitest run",
     "lint": "eslint worker scripts --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:public-identifiers": "tsx scripts/check-public-identifiers.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250506.0",
