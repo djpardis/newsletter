@@ -20,12 +20,12 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 - **No web UI.** You configure the Worker, call HTTP endpoints, and use CLI scripts. Signup forms live on your own site ([examples/](examples/)).
 - **Campaign sends are async.** `POST /api/campaigns/send` enqueues delivery; there is no per-recipient confirmation in that response.
 - **No open or click tracking.** Bounces and complaints are handled via Resend webhooks when configured.
-- **You own the list.** Subscriber data is in your D1 database; this is not a hosted newsletter SaaS.
+- **You own the list.** Subscriber data is in your D1 database; you run the stack yourself.
 
 Full install, env vars, API reference, and scripts: [SETUP.md](SETUP.md). Production deploy: [DEPLOYING.md](DEPLOYING.md).
 
 ## Contributing and security
 
 - Contributions: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Security disclosures: [SECURITY.md](SECURITY.md)
+- Security policy: [SECURITY.md](SECURITY.md)
 - License: [MIT](LICENSE)
