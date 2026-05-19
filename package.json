@@ -8,7 +8,8 @@
     "test": "vitest run",
     "lint": "eslint worker scripts --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "check:public-identifiers": "tsx scripts/check-public-identifiers.ts"
+    "check:public-identifiers": "tsx scripts/check-public-identifiers.ts",
+    "check:docs": "tsx scripts/check-docs.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250506.0",

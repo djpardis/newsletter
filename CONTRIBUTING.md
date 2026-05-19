@@ -13,6 +13,8 @@ Thanks for your interest. Patches and issues are welcome.
 
 ```bash
 npm install
+npm run check:docs
+npm run check:public-identifiers
 npm run typecheck
 npm run lint
 npm test
