@@ -1,6 +1,9 @@
 name: Deploy
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       environment:
@@ -8,10 +11,17 @@ on:
         required: true
         default: production
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment || 'production' }}
     env:
       WRANGLER_CONFIG: wrangler.generated.toml
       WORKER_NAME: ${{ vars.WORKER_NAME }}
