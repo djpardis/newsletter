@@ -11,18 +11,18 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 - **Cloudflare** account with Workers, D1, and Queues, plus the [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
 - **Resend** account with a [verified sending domain](https://resend.com/docs/dashboard/domains/introduction)
 
-## What to know before you start
+## Operational notes
 
-- **No web UI.** Deploy with Wrangler, run list operations through the Bearer-protected HTTP API or the TypeScript scripts in `scripts/`, and implement signup on your site ([examples/](examples/)).
+- **No web UI.** Deploy through GitHub Actions or Wrangler, run list operations through the Bearer-protected HTTP API or the TypeScript scripts in `scripts/`, and implement signup on your site ([examples/](examples/)).
 - **Campaign sends are async.** `POST /api/campaigns/send` queues delivery and responds right away with how many recipients were queued. It does not wait for Resend to accept or deliver each message.
 - **No open or click tracking.** Opens and clicks are not tracked. Bounces and complaints update subscriber status in D1 only when Resend webhooks are enabled.
 - **You own the list.** Subscriber data stays in your D1 database under your Cloudflare account.
 
 ## Deployment model
 
-The checked-in `wrangler.toml` is for local development and uses placeholders only. Production deploys should use `.github/workflows/deploy.yml`, which generates `wrangler.generated.toml` from GitHub environment variables and secrets before applying migrations and deploying the Worker.
+The checked-in `wrangler.toml` is local/default config. Merges to `main` deploy automatically with the `production` GitHub environment. Manual deploys can target another environment from `.github/workflows/deploy.yml`.
 
-This keeps the project reusable across operators: each deployment gets its own Worker name, D1 database, queue, domain, sender, and secrets without committing operator-specific values. See [DEPLOYING.md](DEPLOYING.md) for the required environment variables and secrets.
+Use GitHub environments for deployment-specific Worker names, D1 IDs, queue names, domains, senders, and secrets. See [DEPLOYING.md](DEPLOYING.md) for the variable list.
 
 Install, configuration, the HTTP API, and scripts: [SETUP.md](SETUP.md). Production deploy and webhooks: [DEPLOYING.md](DEPLOYING.md).
 
