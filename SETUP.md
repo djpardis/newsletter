@@ -38,7 +38,7 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 | `RESEND_WEBHOOK_SECRET` | optional | `secret put` | Enables `/api/webhooks/resend` |
 | `TURNSTILE_SECRET_KEY` | optional | `secret put` | Requires Cloudflare Turnstile on subscribe |
 | `SITE_URL` | optional | `[vars]` | Website URL for redirects and email links; falls back to `BASE_URL` |
-| `CORS_ORIGIN` | optional | `[vars]` | Allowed origin for `/api/subscribe` |
+| `CORS_ORIGIN` | optional | `[vars]` | Allowed origin for `/api/subscribe`; use comma-separated values for multiple origins, and `http://localhost:*` / `http://127.0.0.1:*` for local dev |
 | `SITE_NAME` | optional | `[vars]` | Brand name in emails (default: `Newsletter`) |
 | `COMPANY_ADDRESS` | optional | `[vars]` | Postal line in campaign footers (CAN-SPAM/CASL) |
 | `UNSUBSCRIBE_MAILTO` | optional | `[vars]` | Mailto address for `List-Unsubscribe` header |
