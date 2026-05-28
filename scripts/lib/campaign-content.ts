@@ -114,13 +114,13 @@ export function validateCampaignMarkdown(md: string): string[] {
   if (!trimmed.startsWith("Hey,")) {
     errors.push('Campaign body must start with "Hey,".');
   }
-  if (!/\nMore soon\.\n\n— .+  \n\*.+\*\n/.test(trimmed)) {
+  if (!/\nMore soon\.\n\n— .+[ ]{2}\n\*.+\*\n/.test(trimmed)) {
     errors.push('Campaign body must include closing: "More soon." then a "— Name  " signature line then "*tagline*".');
   }
   if (!trimmed.includes("{{unsubscribe_url}}")) {
     errors.push("Campaign body must include {{unsubscribe_url}}.");
   }
-  if (!/You're receiving this because you subscribed to .+\.  \nNo longer interested\?/.test(trimmed)) {
+  if (!/You're receiving this because you subscribed to .+\.[ ]{2}\nNo longer interested\?/.test(trimmed)) {
     errors.push('Campaign footer must include "You\'re receiving this because you subscribed to <Name>.  \\nNo longer interested?"');
   }
   if (!/\[Unsubscribe →\]\(\{\{unsubscribe_url\}\}\)/.test(trimmed)) {
