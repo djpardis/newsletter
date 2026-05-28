@@ -2,6 +2,7 @@ node_modules/
 
 .wrangler/
 dist/
+wrangler.generated.toml
 *.local.sql
 *.local.md
 .env
