@@ -23,10 +23,10 @@ This is a [link](https://example.com).
 
 More soon.
 
-— Vance Refrigeration  
-*Boring on purpose.*
+— Example Sender  
+*Your next set.*
 
-You're receiving this because you subscribed to Vance Refrigeration.  
+You're receiving this because you subscribed to Example Sender.  
 No longer interested? [Unsubscribe →]({{unsubscribe_url}})`;
 
 describe("campaign-content", () => {
@@ -41,9 +41,9 @@ describe("campaign-content", () => {
     expect(campaign.html).not.toContain("font-family");
     expect(campaign.html).not.toContain("style=");
     expect(campaign.html).toContain('<a href="https://example.com">link</a>');
-    expect(campaign.html).toContain("<em>Boring on purpose.</em>");
-    expect(campaign.html).toContain("— Vance Refrigeration<br>");
-    expect(campaign.html).toContain("You&#39;re receiving this because you subscribed to Vance Refrigeration.<br>");
+    expect(campaign.html).toContain("<em>Your next set.</em>");
+    expect(campaign.html).toContain("— Example Sender<br>");
+    expect(campaign.html).toContain("You&#39;re receiving this because you subscribed to Example Sender.<br>");
     expect(campaign.html).toContain('No longer interested? <a href="{{unsubscribe_url}}">Unsubscribe →</a>');
   });
 
@@ -77,19 +77,19 @@ describe("campaign-content", () => {
     expect(
       validateCampaignMarkdown(
         goodCampaign.replace(
-          "You're receiving this because you subscribed to Vance Refrigeration.  \nNo longer interested?",
-          "You're receiving this because you subscribed to Vance Refrigeration.\nNo longer interested?",
+          "You're receiving this because you subscribed to Example Sender.  \nNo longer interested?",
+          "You're receiving this because you subscribed to Example Sender.\nNo longer interested?",
         ),
       ),
-    ).toContain('Campaign footer must put "No longer interested?" on the next line in the same paragraph.');
+    ).toContain('Campaign footer must include "You\'re receiving this because you subscribed to <Name>.  \\nNo longer interested?"');
   });
 
   it("rejects em-dash subject lines", () => {
-    expect(validateCampaignSubject("Smoke test — Vance Refrigeration")).toContain(
+    expect(validateCampaignSubject("Smoke test — Example Sender")).toContain(
       "Campaign subject must not use an em dash. Write it like a news update.",
     );
     expect(() =>
-      renderCampaignMarkdown(goodCampaign.replace('subject: "Test campaign"', 'subject: "Smoke test — Vance Refrigeration"')),
+      renderCampaignMarkdown(goodCampaign.replace('subject: "Test campaign"', 'subject: "Smoke test — Example Sender"')),
     ).toThrow("Campaign subject must not use an em dash");
   });
 
@@ -100,7 +100,7 @@ describe("campaign-content", () => {
     mkdirSync(templatesDir, { recursive: true });
     writeFileSync(
       join(templatesDir, "footer.md"),
-      "More soon.\n\n— Vance Refrigeration  \n*Boring on purpose.*\n\nYou're receiving this because you subscribed to Vance Refrigeration.  \nNo longer interested? [Unsubscribe →]({{unsubscribe_url}})\n",
+      "More soon.\n\n— Example Sender  \n*Your next set.*\n\nYou're receiving this because you subscribed to Example Sender.  \nNo longer interested? [Unsubscribe →]({{unsubscribe_url}})\n",
       "utf8",
     );
     const campaignPath = join(templatesDir, "update.md");
