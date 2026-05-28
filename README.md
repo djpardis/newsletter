@@ -20,7 +20,7 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 
 ## Deployment model
 
-The checked-in `wrangler.toml` is local/default config. Merges to `main` deploy automatically with the `production` GitHub environment. Manual deploys can target another environment from `.github/workflows/deploy.yml`.
+The checked-in `wrangler.toml` is local/default config. Deploy by running `.github/workflows/deploy.yml` and selecting the GitHub environment for that deployment.
 
 Use GitHub environments for deployment-specific Worker names, D1 IDs, queue names, domains, senders, and secrets. See [DEPLOYING.md](DEPLOYING.md) for the variable list.
 
