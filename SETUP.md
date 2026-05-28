@@ -10,7 +10,7 @@
 
 ```bash
 npm install
-npx wrangler d1 create newsletter          # paste database_id into wrangler.toml
+npx wrangler d1 create newsletter
 npx wrangler queues create newsletter-send
 npx wrangler d1 migrations apply newsletter --remote
 ```
