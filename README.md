@@ -1,5 +1,9 @@
 # newsletter
 
+<p align="center">
+  <img src="assets/hero.png" width="560" alt="" />
+</p>
+
 A small HTTP API for running your own mailing list: double opt-in signups, one-click unsubscribe, campaign delivery, and bounce handling. The Worker runs on [Cloudflare](https://developers.cloudflare.com/workers/); subscriber and campaign state live in [D1](https://developers.cloudflare.com/d1/); outbound mail goes through [Resend](https://resend.com/).
 
 [![CI](https://github.com/djpardis/newsletter/actions/workflows/ci.yml/badge.svg)](https://github.com/djpardis/newsletter/actions/workflows/ci.yml)
@@ -20,7 +24,7 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 
 ## Deployment model
 
-The checked-in `wrangler.toml` is local/default config. Merges to `main` deploy automatically with the `production` GitHub environment. Manual deploys can target another environment from `.github/workflows/deploy.yml`.
+The checked-in `wrangler.toml` is local/default config. Merges to `main` auto-deploy when `WORKER_NAME` is set in the `production` GitHub environment; the job is skipped otherwise. Manual runs can target any environment.
 
 Use GitHub environments for deployment-specific Worker names, D1 IDs, queue names, domains, senders, and secrets. See [DEPLOYING.md](DEPLOYING.md) for the variable list.
 

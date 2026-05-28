@@ -1,8 +1,8 @@
 # Deploying
 
-Production deploys run through `.github/workflows/deploy.yml`. Merges to
-`main` deploy with the `production` GitHub environment; manual runs can target
-another environment.
+Production deploys run through `.github/workflows/deploy.yml`. Merges to `main`
+auto-deploy when `WORKER_NAME` is set in the `production` GitHub environment;
+the job is skipped otherwise. Manual runs can target any environment.
 
 Provision the Cloudflare D1 database and queue, verify the sending domain in
 Resend, then populate the GitHub environment variables and secrets below. The
@@ -21,10 +21,11 @@ Queues are not available in `wrangler dev` without `--remote`. For local testing
 ## CI/CD
 
 - `.github/workflows/ci.yml` — runs `typecheck`, `lint`, and `vitest` on every push and pull request.
-- `.github/workflows/deploy.yml` — deploys on pushes to `main` and supports
-  manual runs for non-production environments; generates a Wrangler config from
-  GitHub environment variables, applies D1 migrations, deploys, syncs Worker
-  secrets, then checks `/health`.
+- `.github/workflows/deploy.yml` — auto-deploys on push to `main` when
+  `WORKER_NAME` is set in the `production` environment (skipped otherwise);
+  manual runs target any environment. Generates a Wrangler config from GitHub
+  environment variables, applies D1 migrations, deploys, syncs Worker secrets,
+  then checks `/health`.
 
 Create one GitHub **Environment** per operator/deployment. Store real domains,
 sender addresses, database IDs, queue names, and notification recipients in that
