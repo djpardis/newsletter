@@ -2,8 +2,10 @@
  * Trigger send for a campaign via the Worker API.
  *
  * Usage:
- *   NEWSLETTER_API_URL=https://newsletter.example.com ADMIN_BEARER_TOKEN=secret npx tsx scripts/send-campaign.ts --id <uuid>
+ *   NEWSLETTER_API_URL=https://newsletter.example.com ADMIN_BEARER_TOKEN=secret npx tsx scripts/send-campaign.ts --id <uuid> --reviewed
  */
+import { assertWorkerUpToDate } from "./lib/version-guard.js";
+
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);
   if (i === -1 || i + 1 >= process.argv.length) return undefined;
@@ -31,6 +33,8 @@ async function main() {
     console.error("Refusing full-list send without --reviewed. Test-send and review the campaign first.");
     process.exit(1);
   }
+
+  await assertWorkerUpToDate(base, { skip: hasFlag("--skip-version-check") });
 
   const res = await fetch(`${base}/api/campaigns/send`, {
     method: "POST",

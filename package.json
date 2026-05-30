@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy --var DEPLOY_SHA:$(git rev-parse --short HEAD)",
+    "deploy": "wrangler deploy ${WRANGLER_CONFIG:+--config $WRANGLER_CONFIG} --var DEPLOY_SHA:$(git rev-parse --short HEAD)",
     "test": "vitest run",
     "lint": "eslint worker scripts --max-warnings 0",
     "typecheck": "tsc --noEmit",
