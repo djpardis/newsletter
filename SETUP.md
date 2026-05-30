@@ -32,6 +32,7 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 | `RESEND_API_KEY` | yes | `secret put` | Resend API key |
 | `ADMIN_BEARER_TOKEN` | yes | `secret put` | Bearer token for admin endpoints |
 | `FROM_EMAIL` | yes | `[vars]` | Sender address (`Name <email@domain>`) |
+| `REPLY_TO` | optional | `[vars]` | Reply-To on campaign mail (`hello@yourdomain.com`) |
 | `BASE_URL` | yes | `[vars]` | Public Worker URL (no trailing slash) |
 | `NOTIFY_EMAIL` | optional | `[vars]` | Operator email on new subscriber or reactivation |
 | `DIGEST_EMAIL` | optional | `[vars]` | Weekly digest recipient; falls back to `NOTIFY_EMAIL` |

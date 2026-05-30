@@ -32,7 +32,7 @@ Common optional:
 - `WORKER_CUSTOM_DOMAIN`
 - `SITE_URL`, `SITE_NAME`, `SITE_TAGLINE`
 - `CORS_ORIGIN` — comma-separated allowlist; add `http://localhost:*` for local dev
-- `COMPANY_ADDRESS`, `UNSUBSCRIBE_MAILTO`
+- `COMPANY_ADDRESS`, `UNSUBSCRIBE_MAILTO`, `REPLY_TO`
 - `NOTIFY_EMAIL`, `DIGEST_EMAIL`
 - `CRON_SCHEDULE`
 - `WORKERS_DEV`, `PREVIEW_URLS`

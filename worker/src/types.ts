@@ -2,6 +2,8 @@ export interface Env {
   DB: D1Database;
   RESEND_API_KEY: string;
   FROM_EMAIL: string;
+  /** Reply-To on campaign mail (Resend `reply_to`). Omit on transactional sends. */
+  REPLY_TO?: string;
   BASE_URL: string;
   ADMIN_BEARER_TOKEN: string;
   TURNSTILE_SECRET_KEY?: string;
