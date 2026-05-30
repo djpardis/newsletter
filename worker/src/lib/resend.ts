@@ -27,6 +27,9 @@ export async function sendEmail(
     text: input.text,
   };
   if (input.html) payload.html = input.html;
+  if (!input.transactional && env.REPLY_TO?.includes("@")) {
+    payload.reply_to = env.REPLY_TO;
+  }
   if (!input.transactional && input.unsubscribeUrl) {
     payload.headers = listUnsubscribeHeaders(env, input.unsubscribeUrl);
   }
