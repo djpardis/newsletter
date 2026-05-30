@@ -87,8 +87,13 @@ Gmail and Googlemail addresses are shown in canonical form (dots and `+tag` alia
 npx tsx scripts/import-csv.ts <file.csv>   # import email[,status]
 npx tsx scripts/export-csv.ts              # export subscribers as CSV
 npx tsx scripts/create-campaign.ts --md post.md --slug s --subject "..." --kind manual
-npx tsx scripts/send-test-campaign.ts      # POST /api/campaigns/test-send
+npx tsx scripts/send-test.ts --md post.md --to you@example.com   # create + test-send in one step
+npx tsx scripts/send-test-campaign.ts      # POST /api/campaigns/test-send (needs --id)
 npx tsx scripts/send-campaign.ts           # POST /api/campaigns/send (requires --reviewed)
 ```
 
-Create a campaign from reviewed Markdown, send a one-off test with `send-test-campaign.ts`, then production send with `send-campaign.ts --reviewed`. Test sends do not update campaign delivery metrics; recipients still get real unsubscribe links.
+The fastest path is `send-test.ts`: it reads `NEWSLETTER_API_URL`, `ADMIN_BEARER_TOKEN`, and `NEWSLETTER_D1_NAME` from a local `.env` (gitignored), creates the campaign from Markdown with a unique dated slug, and immediately test-sends to any `--to` address. Pass `--id <uuid>` instead of `--md` to reuse an existing campaign. Shell-exported env vars override `.env`.
+
+Before sending, `send-test.ts` and `send-campaign.ts` compare the deployed Worker's `/health` SHA to your local `git HEAD` and refuse to send against a stale deployment (deploy first, or pass `--skip-version-check`). See [DEPLOYING.md](DEPLOYING.md) for keeping the Worker in sync.
+
+For the explicit two-step flow, create a campaign from reviewed Markdown with `create-campaign.ts`, send a one-off test with `send-test-campaign.ts`, then production send with `send-campaign.ts --reviewed`. Test sends do not update campaign delivery metrics; recipients still get real unsubscribe links.
