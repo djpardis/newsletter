@@ -4,7 +4,7 @@ import { sha256Hex, randomTokenHex, uuid } from "../lib/crypto.js";
 import { sendEmail } from "../lib/resend.js";
 import { checkSubscribeRateLimit } from "../lib/rate-limit.js";
 import { hashMeta } from "../lib/request-meta.js";
-import { confirmEmail, baseUrl } from "../lib/templates.js";
+import { confirmEmail, baseUrl, siteUrl } from "../lib/templates.js";
 import { verifyTurnstile } from "../lib/turnstile.js";
 import {
   isHoneypotTriggered,
@@ -53,17 +53,41 @@ async function sendConfirmEmail(
 function notifyNewSubscriber(
   env: Env,
   email: string,
+  source: string | null,
 ): Promise<void> {
   if (!env.NOTIFY_EMAIL) return Promise.resolve();
+  const siteName = env.SITE_NAME ?? "Newsletter";
+  const website = siteUrl(env);
+  const signupSource = source || "unknown";
+  const htmlSiteName = escapeHtml(siteName);
+  const htmlEmail = escapeHtml(email);
+  const htmlWebsite = escapeHtml(website);
+  const htmlSource = escapeHtml(signupSource);
   return sendEmail(env, {
     to: env.NOTIFY_EMAIL,
-    subject: `New pending signup: ${email}`,
-    text: `${email} started signup for ${env.SITE_NAME ?? "your newsletter"} and was sent a confirmation email.`,
-    html: `<p>${email} started signup for ${env.SITE_NAME ?? "your newsletter"} and was sent a confirmation email.</p>`,
+    subject: `New pending signup for ${siteName}: ${email}`,
+    text: [
+      `${email} started signup for ${siteName} and was sent a confirmation email.`,
+      "",
+      `Website: ${website}`,
+      `Source: ${signupSource}`,
+    ].join("\n"),
+    html: [
+      `<p>${htmlEmail} started signup for ${htmlSiteName} and was sent a confirmation email.</p>`,
+      `<p>Website: <a href="${htmlWebsite}">${htmlWebsite}</a><br>Source: ${htmlSource}</p>`,
+    ].join("\n"),
     transactional: true,
   }).then((result) => {
     if (!result.ok) console.error("notify_email_failed:", result.error);
   }).catch(console.error);
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function emailFailureResponse(detail: string): Response {
@@ -177,7 +201,7 @@ export async function handleSubscribe(
   if (!sent.ok) return emailFailureResponse(sent.error);
 
   if (notifySubscriberEmail) {
-    const notify = notifyNewSubscriber(env, notifySubscriberEmail);
+    const notify = notifyNewSubscriber(env, notifySubscriberEmail, source);
     if (ctx) ctx.waitUntil(notify);
     else await notify;
   }

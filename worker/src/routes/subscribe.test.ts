@@ -65,6 +65,7 @@ function envWithDb(db: MockD1): Env {
     NOTIFY_EMAIL: "operator@example.com",
     RESEND_API_KEY: "resend",
     SITE_NAME: "Vance Refrigeration",
+    SITE_URL: "https://vance.example.com",
   };
 }
 
@@ -126,8 +127,15 @@ describe("handleSubscribe", () => {
       /^Thank you for subscribing to Vance Refrigeration\.\n\nConfirm your email: https:\/\/newsletter\.example\.com\/api\/confirm\?token=[a-f0-9]+\n\nIf you did not subscribe, ignore this message\.$/,
     );
     expect(notifyPayload.to).toEqual(["operator@example.com"]);
-    expect(notifyPayload.subject).toBe("New pending signup: new@example.com");
+    expect(notifyPayload.subject).toBe(
+      "New pending signup for Vance Refrigeration: new@example.com",
+    );
     expect(notifyPayload.text).toContain("new@example.com started signup");
+    expect(notifyPayload.text).toContain("Website: https://vance.example.com");
+    expect(notifyPayload.text).toContain("Source: test");
+    expect(notifyPayload.html).toContain(
+      'Website: <a href="https://vance.example.com">https://vance.example.com</a><br>Source: test',
+    );
     expect(db.runs.some((r) => /INSERT INTO subscribers/i.test(r.sql))).toBe(true);
     vi.unstubAllGlobals();
   });
@@ -170,8 +178,12 @@ describe("handleSubscribe", () => {
       (fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].body as string,
     );
     expect(notifyPayload.to).toEqual(["operator@example.com"]);
-    expect(notifyPayload.subject).toBe("New pending signup: returning@example.com");
+    expect(notifyPayload.subject).toBe(
+      "New pending signup for Vance Refrigeration: returning@example.com",
+    );
     expect(notifyPayload.text).toContain("returning@example.com started signup");
+    expect(notifyPayload.text).toContain("Website: https://vance.example.com");
+    expect(notifyPayload.text).toContain("Source: test");
     expect(db.runs.some((r) => /UPDATE subscribers SET/i.test(r.sql))).toBe(true);
     vi.unstubAllGlobals();
   });
