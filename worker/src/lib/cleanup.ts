@@ -6,6 +6,7 @@ const AUDIT_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
 export interface CleanupSummary {
   rate_limits: number;
   verification_tokens: number;
+  pending_subscribers: number;
   events_audit: number;
 }
 
@@ -30,6 +31,53 @@ export async function runCleanup(
     .bind(now - TOKEN_RETENTION_MS, now - TOKEN_RETENTION_MS)
     .run();
 
+  const stalePendingCutoff = now - TOKEN_RETENTION_MS;
+  await env.DB.prepare(
+    `UPDATE events_audit
+     SET subscriber_id = NULL
+     WHERE subscriber_id IN (
+       SELECT id FROM subscribers
+       WHERE status = 'pending'
+         AND NOT EXISTS (
+           SELECT 1 FROM verification_tokens
+           WHERE subscriber_id = subscribers.id
+             AND type = 'confirm'
+             AND expires_at >= ?
+         )
+     )`,
+  )
+    .bind(stalePendingCutoff)
+    .run();
+
+  const pendingTokens = await env.DB.prepare(
+    `DELETE FROM verification_tokens
+     WHERE subscriber_id IN (
+       SELECT id FROM subscribers
+       WHERE status = 'pending'
+         AND NOT EXISTS (
+           SELECT 1 FROM verification_tokens
+           WHERE subscriber_id = subscribers.id
+             AND type = 'confirm'
+             AND expires_at >= ?
+         )
+     )`,
+  )
+    .bind(stalePendingCutoff)
+    .run();
+
+  const pendingSubscribers = await env.DB.prepare(
+    `DELETE FROM subscribers
+     WHERE status = 'pending'
+       AND NOT EXISTS (
+         SELECT 1 FROM verification_tokens
+         WHERE subscriber_id = subscribers.id
+           AND type = 'confirm'
+           AND expires_at >= ?
+       )`,
+  )
+    .bind(stalePendingCutoff)
+    .run();
+
   const audit = await env.DB.prepare(
     `DELETE FROM events_audit WHERE created_at < ?`,
   )
@@ -38,7 +86,8 @@ export async function runCleanup(
 
   return {
     rate_limits: rl.meta?.changes ?? 0,
-    verification_tokens: tokens.meta?.changes ?? 0,
+    verification_tokens: (tokens.meta?.changes ?? 0) + (pendingTokens.meta?.changes ?? 0),
+    pending_subscribers: pendingSubscribers.meta?.changes ?? 0,
     events_audit: audit.meta?.changes ?? 0,
   };
 }

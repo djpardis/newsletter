@@ -57,9 +57,9 @@ function notifyNewSubscriber(
   if (!env.NOTIFY_EMAIL) return Promise.resolve();
   return sendEmail(env, {
     to: env.NOTIFY_EMAIL,
-    subject: `New subscriber: ${email}`,
-    text: `${email} just subscribed to ${env.SITE_NAME ?? "your newsletter"}.`,
-    html: `<p>${email} just subscribed to ${env.SITE_NAME ?? "your newsletter"}.</p>`,
+    subject: `New pending signup: ${email}`,
+    text: `${email} started signup for ${env.SITE_NAME ?? "your newsletter"} and was sent a confirmation email.`,
+    html: `<p>${email} started signup for ${env.SITE_NAME ?? "your newsletter"} and was sent a confirmation email.</p>`,
     transactional: true,
   }).then((result) => {
     if (!result.ok) console.error("notify_email_failed:", result.error);
