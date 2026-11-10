@@ -76,6 +76,11 @@ describe("confirmEmail", () => {
     expect(subject).toBe("Confirm your subscription to Vance Refrigeration");
   });
 
+  it("uses CONFIRM_EMAIL_SUBJECT when set", () => {
+    const { subject } = confirmEmail(baseEnv({ CONFIRM_EMAIL_SUBJECT: "Welcome aboard" }), confirmUrl);
+    expect(subject).toBe("Welcome aboard");
+  });
+
   it("escapes HTML in SITE_NAME", () => {
     const e = baseEnv({ SITE_NAME: "<script>x</script> & Co." });
     const { html } = confirmEmail(e, confirmUrl);
@@ -98,6 +103,12 @@ describe("confirmation pages", () => {
     expect(html).not.toContain("Confirmed!");
     expect(html).toContain('Thank you for subscribing to <a href="https://example.com">Vance Refrigeration</a>.');
     expect(html).not.toContain('font-size:.85rem;color:#888;margin-bottom:1.5rem');
+  });
+
+  it("uses CONFIRMED_PAGE_HEADING for the title and heading when set", () => {
+    const html = confirmOkPage(baseEnv({ ...env, CONFIRMED_PAGE_HEADING: "You're <in>" }));
+    expect(html).toContain("<title>You're &lt;in&gt;</title>");
+    expect(html).toContain("<h1>You're &lt;in&gt;</h1>");
   });
 
   it("does not show a top brand label on the unsubscribe confirmation page", () => {

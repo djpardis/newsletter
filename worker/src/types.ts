@@ -13,6 +13,10 @@ export interface Env {
   COMPANY_ADDRESS?: string;
   /** Display name in confirmation subject (default: Newsletter) */
   SITE_NAME?: string;
+  /** Confirmation email subject (default: "Confirm your subscription to <SITE_NAME>") */
+  CONFIRM_EMAIL_SUBJECT?: string;
+  /** Title and heading of the page shown after confirming (default: "Confirmed") */
+  CONFIRMED_PAGE_HEADING?: string;
   /** Optional mailto for List-Unsubscribe (e.g. list-unsubscribe@yourdomain.com) */
   UNSUBSCRIBE_MAILTO?: string;
   /** Allowed origin for CORS (default: mirror request Origin or *) */

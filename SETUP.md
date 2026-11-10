@@ -43,6 +43,8 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 | `SITE_URL` | optional | `[vars]` | Website URL for redirects and email links; falls back to `BASE_URL` |
 | `CORS_ORIGIN` | optional | `[vars]` | Allowed origin for `/api/subscribe`; use comma-separated values for multiple origins, and `http://localhost:*` / `http://127.0.0.1:*` for local dev |
 | `SITE_NAME` | optional | `[vars]` | Brand name in emails (default: `Newsletter`) |
+| `CONFIRM_EMAIL_SUBJECT` | optional | `[vars]` | Confirmation email subject (default: `Confirm your subscription to <SITE_NAME>`) |
+| `CONFIRMED_PAGE_HEADING` | optional | `[vars]` | Title and heading of the page shown after confirming (default: `Confirmed`) |
 | `COMPANY_ADDRESS` | optional | `[vars]` | Postal line in campaign footers (CAN-SPAM/CASL) |
 | `UNSUBSCRIBE_MAILTO` | optional | `[vars]` | Mailto address for `List-Unsubscribe` header |
 

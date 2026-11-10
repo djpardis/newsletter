@@ -9,6 +9,8 @@ crons = ["17 3 * * *"]
 # FROM_EMAIL = "Newsletter <hello@yourdomain.com>"
 # BASE_URL = "https://newsletter-worker.yourdomain.com"
 # SITE_NAME = "Our Newsletter"
+# CONFIRM_EMAIL_SUBJECT = "Confirm your subscription to Our Newsletter"
+# CONFIRMED_PAGE_HEADING = "Confirmed"
 # CORS_ORIGIN = "https://your-public-site.com"
 
 [[d1_databases]]

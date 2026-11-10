@@ -27,7 +27,7 @@ export function confirmEmail(
   confirmUrl: string,
 ): { subject: string; html: string; text: string } {
   const brand = brandName(env);
-  const subject = `Confirm your subscription to ${brand}`;
+  const subject = env.CONFIRM_EMAIL_SUBJECT ?? `Confirm your subscription to ${brand}`;
   const html = `<!DOCTYPE html><html><body>
   <p>Thank you for subscribing to ${escapeHtml(brand)}.</p>
   <p><a href="${confirmUrl}">Confirm</a> your email.</p>
@@ -50,7 +50,8 @@ function okPageShell(title: string, heading: string, body: string, _env: Env): s
 export function confirmOkPage(env: Env): string {
   const site = siteUrl(env);
   const name = escapeHtml(brandName(env));
-  return okPageShell("Confirmed", "Confirmed", `Thank you for subscribing to <a href="${site}">${name}</a>.`, env);
+  const heading = env.CONFIRMED_PAGE_HEADING ?? "Confirmed";
+  return okPageShell(heading, heading, `Thank you for subscribing to <a href="${site}">${name}</a>.`, env);
 }
 
 export function unsubscribedPage(env: Env): string {
