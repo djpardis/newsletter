@@ -54,7 +54,7 @@ async function main() {
 
   if (campaign.sent_at !== null && !hasFlag("--force")) {
     console.error(
-      `Refusing to delete — campaign was already sent at ${new Date(campaign.sent_at).toISOString()}.\n` +
+      `Refusing to delete: campaign was already sent at ${new Date(campaign.sent_at).toISOString()}.\n` +
       `Pass --force to delete anyway.`,
     );
     process.exit(1);

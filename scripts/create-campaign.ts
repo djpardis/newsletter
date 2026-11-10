@@ -1,8 +1,8 @@
 /**
  * Create a campaign row (does not send).
  *
- * Usage — from a Markdown file (recommended):
- *   npx tsx scripts/create-campaign.ts --md ../site/campaigns/updates/issue-12.md
+ * Usage from a Markdown file (recommended):
+ *   npx tsx scripts/create-campaign.ts --md campaigns/issue-12.md
  *
  * The Markdown file frontmatter supplies slug, subject, and type unless CLI
  * flags override them.

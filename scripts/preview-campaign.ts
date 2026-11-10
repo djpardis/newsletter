@@ -2,7 +2,7 @@
  * Preview a campaign Markdown file without creating or sending anything.
  *
  * Usage:
- *   npx tsx scripts/preview-campaign.ts --md ../site/campaigns/updates/issue-12.md
+ *   npx tsx scripts/preview-campaign.ts --md campaigns/issue-12.md
  */
 import {
   previewWithUnsubscribeUrl,

@@ -15,7 +15,7 @@ export async function handleSendQueue(
 ): Promise<void> {
   const now = Date.now();
 
-  // Group messages by campaign_id — usually all the same per batch —
+  // Group messages by campaign_id (usually all the same per batch)
   // so we fetch the campaign row once rather than per message.
   const campaignIds = [...new Set(batch.messages.map((m) => m.body.campaign_id))];
   const campaigns = new Map<string, {
@@ -42,7 +42,7 @@ export async function handleSendQueue(
     const campaign = campaigns.get(campaign_id);
 
     if (!campaign) {
-      // Campaign deleted or never existed — ack to avoid infinite retry.
+      // Campaign deleted or never existed; ack to avoid infinite retry.
       msg.ack();
       continue;
     }
@@ -57,7 +57,7 @@ export async function handleSendQueue(
     }>();
 
     if (!sub) {
-      // Subscriber unsubscribed, bounced, or deleted since enqueue — skip.
+      // Subscriber unsubscribed, bounced, or deleted since enqueue; skip.
       msg.ack();
       continue;
     }
@@ -98,7 +98,7 @@ export async function handleSendQueue(
            (id, campaign_id, subscriber_id, provider_message_id, status, error, sent_at)
          VALUES (?, ?, ?, NULL, 'failed', ?, ?)`,
       ).bind(did, campaign_id, subscriber_id, result.error, now).run();
-      // Retry the message — Resend failures are often transient.
+      // Retry the message, because Resend failures are often transient.
       msg.retry();
     }
   }
