@@ -7,9 +7,19 @@ import {
   expandCampaignFooterPlaceholder,
   previewWithUnsubscribeUrl,
   renderCampaignMarkdown,
+  renderCampaignMarkdownFile,
   validateCampaignSubject,
   validateCampaignMarkdown,
+  type CampaignRules,
 } from "./campaign-content.js";
+
+const houseRules: CampaignRules = {
+  startsWith: "Hey,",
+  patterns: [
+    { pattern: "\\nMore soon\\.\\n", message: 'Campaign body must include "More soon."' },
+  ],
+  subjectMustNotContain: ["\u2014"],
+};
 
 const goodCampaign = `---
 slug: 2026-05-test
@@ -23,8 +33,8 @@ This is a [link](https://example.com).
 
 More soon.
 
-— Example Sender  
-*Your next set.*
+Example Sender  
+*A short tagline.*
 
 You're receiving this because you subscribed to Example Sender.  
 No longer interested? [Unsubscribe →]({{unsubscribe_url}})`;
@@ -41,8 +51,8 @@ describe("campaign-content", () => {
     expect(campaign.html).not.toContain("font-family");
     expect(campaign.html).not.toContain("style=");
     expect(campaign.html).toContain('<a href="https://example.com">link</a>');
-    expect(campaign.html).toContain("<em>Your next set.</em>");
-    expect(campaign.html).toContain("— Example Sender<br>");
+    expect(campaign.html).toContain("<em>A short tagline.</em>");
+    expect(campaign.html).toContain("Example Sender<br>");
     expect(campaign.html).toContain("You&#39;re receiving this because you subscribed to Example Sender.<br>");
     expect(campaign.html).toContain('No longer interested? <a href="{{unsubscribe_url}}">Unsubscribe →</a>');
   });
@@ -71,26 +81,37 @@ describe("campaign-content", () => {
     );
   });
 
-  it("validates the canonical campaign structure", () => {
+  it("requires only the unsubscribe link by default", () => {
     expect(validateCampaignMarkdown(goodCampaign.split("---\n\n")[1] ?? "")).toEqual([]);
-    expect(validateCampaignMarkdown("Hello")).toContain('Campaign body must start with "Hey,".');
-    expect(
-      validateCampaignMarkdown(
-        goodCampaign.replace(
-          "You're receiving this because you subscribed to Example Sender.  \nNo longer interested?",
-          "You're receiving this because you subscribed to Example Sender.\nNo longer interested?",
-        ),
-      ),
-    ).toContain('Campaign footer must include "You\'re receiving this because you subscribed to <Name>.  \\nNo longer interested?"');
+    expect(validateCampaignMarkdown("Hello")).toEqual([
+      "Campaign body must include {{unsubscribe_url}}.",
+    ]);
+    expect(validateCampaignSubject("Update \u2014 May")).toEqual([]);
   });
 
-  it("rejects em-dash subject lines", () => {
-    expect(validateCampaignSubject("Smoke test — Example Sender")).toContain(
-      "Campaign subject must not use an em dash. Write it like a news update.",
+  it("applies optional house rules", () => {
+    const body = goodCampaign.split("---\n\n")[1] ?? "";
+    expect(validateCampaignMarkdown(body, houseRules)).toEqual([]);
+    expect(validateCampaignMarkdown(`Hello\n${body}`, houseRules)).toContain(
+      'Campaign body must start with "Hey,".',
     );
-    expect(() =>
-      renderCampaignMarkdown(goodCampaign.replace('subject: "Test campaign"', 'subject: "Smoke test — Example Sender"')),
-    ).toThrow("Campaign subject must not use an em dash");
+    expect(validateCampaignMarkdown(body.replace("More soon.", "Bye."), houseRules)).toContain(
+      'Campaign body must include "More soon."',
+    );
+    expect(validateCampaignSubject("Update \u2014 May", houseRules)).toEqual([
+      'Campaign subject must not contain "\u2014".',
+    ]);
+  });
+
+  it("loads house rules from the campaign templates folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "newsletter-rules-test-"));
+    const templatesDir = join(root, "campaigns", "_templates");
+    mkdirSync(templatesDir, { recursive: true });
+    writeFileSync(join(templatesDir, "rules.json"), JSON.stringify(houseRules), "utf8");
+    const file = join(root, "campaigns", "issue.md");
+    writeFileSync(file, goodCampaign.replace("Hey,", "Hello,"), "utf8");
+
+    expect(() => renderCampaignMarkdownFile(file)).toThrow('Campaign body must start with "Hey,".');
   });
 
   it("expands the shared footer marker from the site campaign folder", () => {
@@ -100,7 +121,7 @@ describe("campaign-content", () => {
     mkdirSync(templatesDir, { recursive: true });
     writeFileSync(
       join(templatesDir, "footer.md"),
-      "More soon.\n\n— Example Sender  \n*Your next set.*\n\nYou're receiving this because you subscribed to Example Sender.  \nNo longer interested? [Unsubscribe →]({{unsubscribe_url}})\n",
+      "More soon.\n\nExample Sender  \n*A short tagline.*\n\nYou're receiving this because you subscribed to Example Sender.  \nNo longer interested? [Unsubscribe →]({{unsubscribe_url}})\n",
       "utf8",
     );
     const campaignPath = join(templatesDir, "update.md");

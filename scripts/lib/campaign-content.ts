@@ -107,40 +107,47 @@ function mdToText(md: string): string {
     .trim();
 }
 
-export function validateCampaignMarkdown(md: string): string[] {
+/**
+ * Optional house-style rules, read from `campaigns/_templates/rules.json` next
+ * to the campaign file. Without that file, only the unsubscribe link is
+ * required.
+ */
+export interface CampaignRules {
+  /** Text the campaign body must start with, such as "Hey,". */
+  startsWith?: string;
+  /** Regular expressions the campaign body must match, each with its error. */
+  patterns?: Array<{ pattern: string; message: string }>;
+  /** Strings the subject line must not contain. */
+  subjectMustNotContain?: string[];
+}
+
+export function validateCampaignMarkdown(md: string, rules: CampaignRules = {}): string[] {
   const errors: string[] = [];
   const trimmed = md.trim();
 
-  if (!trimmed.startsWith("Hey,")) {
-    errors.push('Campaign body must start with "Hey,".');
+  if (!trimmed.includes(UNSUBSCRIBE_PLACEHOLDER)) {
+    errors.push(`Campaign body must include ${UNSUBSCRIBE_PLACEHOLDER}.`);
   }
-  if (!/\nMore soon\.\n\n— .+[ ]{2}\n\*.+\*\n/.test(trimmed)) {
-    errors.push('Campaign body must include closing: "More soon." then a "— Name  " signature line then "*tagline*".');
+  if (rules.startsWith && !trimmed.startsWith(rules.startsWith)) {
+    errors.push(`Campaign body must start with "${rules.startsWith}".`);
   }
-  if (!trimmed.includes("{{unsubscribe_url}}")) {
-    errors.push("Campaign body must include {{unsubscribe_url}}.");
-  }
-  if (!/You're receiving this because you subscribed to .+\.[ ]{2}\nNo longer interested\?/.test(trimmed)) {
-    errors.push('Campaign footer must include "You\'re receiving this because you subscribed to <Name>.  \\nNo longer interested?"');
-  }
-  if (!/\[Unsubscribe →\]\(\{\{unsubscribe_url\}\}\)/.test(trimmed)) {
-    errors.push('Campaign body must link only "Unsubscribe →" to {{unsubscribe_url}}.');
+  for (const { pattern, message } of rules.patterns ?? []) {
+    if (!new RegExp(pattern).test(trimmed)) errors.push(message);
   }
 
   return errors;
 }
 
-export function validateCampaignSubject(subject: string): string[] {
-  const errors: string[] = [];
-  if (subject.includes("—")) {
-    errors.push("Campaign subject must not use an em dash. Write it like a news update.");
-  }
-  return errors;
+export function validateCampaignSubject(subject: string, rules: CampaignRules = {}): string[] {
+  return (rules.subjectMustNotContain ?? [])
+    .filter((text) => subject.includes(text))
+    .map((text) => `Campaign subject must not contain "${text}".`);
 }
 
 export function renderCampaignMarkdown(
   source: string,
   options: CampaignRenderOptions = {},
+  rules: CampaignRules = {},
 ): CampaignRenderResult {
   const { data, body } = parseFrontmatter(source);
   const slug = options.slug ?? data.slug;
@@ -149,7 +156,7 @@ export function renderCampaignMarkdown(
 
   if (!slug) throw new Error("Missing campaign slug.");
   if (!subject) throw new Error("Missing campaign subject.");
-  const subjectErrors = validateCampaignSubject(subject);
+  const subjectErrors = validateCampaignSubject(subject, rules);
   if (subjectErrors.length > 0) throw new Error(subjectErrors.join("\n"));
   if (!typeRaw || !isCampaignType(typeRaw)) {
     throw new Error("Campaign type must be update, episode, or other.");
@@ -160,7 +167,7 @@ export function renderCampaignMarkdown(
     throw new Error("Campaign kind must be manual, new_post, or new_show.");
   }
 
-  const errors = validateCampaignMarkdown(body);
+  const errors = validateCampaignMarkdown(body, rules);
   if (errors.length > 0) throw new Error(errors.join("\n"));
 
   return {
@@ -174,24 +181,30 @@ export function renderCampaignMarkdown(
   };
 }
 
-function findCampaignFooterFile(markdownFile: string): string {
+function findTemplatesFile(markdownFile: string, name: string): string | null {
   let dir = dirname(resolve(markdownFile));
   for (;;) {
-    const candidate = join(dir, "_templates", "footer.md");
+    const candidate = join(dir, "_templates", name);
     if (existsSync(candidate)) return candidate;
 
     const parent = dirname(dir);
-    if (parent === dir) break;
+    if (parent === dir) return null;
     dir = parent;
   }
-
-  throw new Error("Missing campaigns/_templates/footer.md for {{campaign_footer}}.");
 }
 
 export function expandCampaignFooterPlaceholder(source: string, markdownFile: string): string {
   if (!source.includes(CAMPAIGN_FOOTER_PLACEHOLDER)) return source;
-  const footer = readFileSync(findCampaignFooterFile(markdownFile), "utf8").trim();
+  const footerFile = findTemplatesFile(markdownFile, "footer.md");
+  if (!footerFile) throw new Error("Missing campaigns/_templates/footer.md for {{campaign_footer}}.");
+  const footer = readFileSync(footerFile, "utf8").trim();
   return source.replaceAll(CAMPAIGN_FOOTER_PLACEHOLDER, footer);
+}
+
+export function loadCampaignRules(markdownFile: string): CampaignRules {
+  const rulesFile = findTemplatesFile(markdownFile, "rules.json");
+  if (!rulesFile) return {};
+  return JSON.parse(readFileSync(rulesFile, "utf8")) as CampaignRules;
 }
 
 export function renderCampaignMarkdownFile(
@@ -201,6 +214,7 @@ export function renderCampaignMarkdownFile(
   return renderCampaignMarkdown(
     expandCampaignFooterPlaceholder(readFileSync(file, "utf8"), file),
     options,
+    loadCampaignRules(file),
   );
 }
 

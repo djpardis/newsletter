@@ -98,4 +98,23 @@ The fastest path is `send-test.ts`: it reads `NEWSLETTER_API_URL`, `ADMIN_BEARER
 
 Before sending, `send-test.ts` and `send-campaign.ts` compare the deployed Worker's `/health` SHA to your local `git HEAD` and refuse to send against a stale deployment (deploy first, or pass `--skip-version-check`). See [DEPLOYING.md](DEPLOYING.md) for keeping the Worker in sync.
 
+Campaign Markdown must include the `{{unsubscribe_url}}` link. To enforce a
+house style as well, add `campaigns/_templates/rules.json` next to your
+campaigns. The scripts read it from the nearest `_templates` folder above the
+Markdown file, and every rule is optional:
+
+```json
+{
+  "startsWith": "Hey,",
+  "patterns": [
+    { "pattern": "\\nMore soon\\.\\n", "message": "End with \"More soon.\"" }
+  ],
+  "subjectMustNotContain": ["!!"]
+}
+```
+
+`patterns` are regular expressions matched against the Markdown body. A
+`{{campaign_footer}}` marker in a campaign is replaced with
+`campaigns/_templates/footer.md` before validation.
+
 For the explicit two-step flow, create a campaign from reviewed Markdown with `create-campaign.ts`, send a one-off test with `send-test-campaign.ts`, then production send with `send-campaign.ts --reviewed`. Test sends do not update campaign delivery metrics; recipients still get real unsubscribe links.
