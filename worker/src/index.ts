@@ -12,6 +12,8 @@ import { health } from "./routes/health.js";
 import { sendWeeklyDigest, shouldSendWeeklyDigest } from "./lib/weekly-digest.js";
 import { handleWeeklyDigestTestSend } from "./routes/digest.js";
 
+const REQUIRED_CONFIG = ["BASE_URL", "FROM_EMAIL"] as const;
+
 export default {
   async fetch(
     request: Request,
@@ -28,6 +30,12 @@ export default {
 
       if (request.method === "GET" && path === "/health") {
         return health(env);
+      }
+
+      const missing = REQUIRED_CONFIG.filter((name) => !env[name]);
+      if (missing.length > 0) {
+        console.error("Missing required configuration:", missing.join(", "));
+        return Response.json({ error: "missing_config", missing }, { status: 500 });
       }
 
       if (path === "/api/subscribe") {

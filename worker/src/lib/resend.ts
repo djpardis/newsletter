@@ -16,6 +16,15 @@ export type SendEmailResult =
   | { ok: true; id: string }
   | { ok: false; error: string };
 
+function isLocalBaseUrl(baseUrl: string | undefined): boolean {
+  if (!baseUrl) return false;
+  try {
+    return ["localhost", "127.0.0.1"].includes(new URL(baseUrl).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function sendEmail(
   env: Env,
   input: SendEmailInput,
@@ -32,6 +41,19 @@ export async function sendEmail(
   }
   if (!input.transactional && input.unsubscribeUrl) {
     payload.headers = listUnsubscribeHeaders(env, input.unsubscribeUrl);
+  }
+
+  if (!env.RESEND_API_KEY) {
+    if (isLocalBaseUrl(env.BASE_URL)) {
+      console.log("Email not sent because RESEND_API_KEY is not set. Local preview:", {
+        to: input.to,
+        subject: input.subject,
+        text: input.text,
+      });
+      return { ok: true, id: "local-preview" };
+    }
+    console.error("Email not sent because RESEND_API_KEY is not set");
+    return { ok: false, error: "resend_not_configured" };
   }
 
   let res: Response;

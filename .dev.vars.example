@@ -1,0 +1,9 @@
+# Local values for `wrangler dev`. Copy to .dev.vars and edit as needed.
+BASE_URL=http://localhost:8787
+FROM_EMAIL="Newsletter <hello@example.com>"
+ADMIN_BEARER_TOKEN=local-dev-token
+CORS_ORIGIN=http://localhost:*,http://127.0.0.1:*
+
+# Leave blank to print emails, including confirmation links, to the dev log.
+# Set a Resend key and a FROM_EMAIL on a verified domain to send real email.
+RESEND_API_KEY=

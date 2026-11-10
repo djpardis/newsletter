@@ -58,3 +58,36 @@ describe("sendEmail reply_to", () => {
     expect(body.reply_to).toBeUndefined();
   });
 });
+
+describe("sendEmail without RESEND_API_KEY", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const input = { to: "user@example.com", subject: "Confirm", text: "Link", transactional: true };
+
+  it("logs a local preview instead of sending when BASE_URL is localhost", async () => {
+    const result = await sendEmail(
+      { ...baseEnv, RESEND_API_KEY: "", BASE_URL: "http://localhost:8787" },
+      input,
+    );
+
+    expect(result).toEqual({ ok: true, id: "local-preview" });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(console.log).toHaveBeenCalled();
+  });
+
+  it("fails when BASE_URL is not local", async () => {
+    const result = await sendEmail({ ...baseEnv, RESEND_API_KEY: "" }, input);
+
+    expect(result).toEqual({ ok: false, error: "resend_not_configured" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
