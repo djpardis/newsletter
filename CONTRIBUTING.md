@@ -6,7 +6,7 @@ Thanks for your interest. Patches and issues are welcome.
 
 1. Open an issue first for anything non-trivial so we can agree on direction.
 2. Fork and create a branch from `main` (e.g. `fix/<topic>`, `feat/<topic>`).
-3. Make focused commits. Run the local checks below — CI runs the same set.
+3. Make focused commits. Run the local checks below, which match the CI checks.
 4. Open a pull request with a short description of the change and any operator-facing impact (new env vars, migrations, breaking API changes).
 
 ## Local checks
@@ -18,7 +18,7 @@ npm run check:public-identifiers
 npm run typecheck
 npm run lint
 npm test
-npm run deploy   # manual deploy; CI uses the deploy workflow
+npm run smoke    # local Worker with .dev.vars.example, fails on any error
 ```
 
 ## Compatibility expectations
@@ -29,7 +29,7 @@ npm run deploy   # manual deploy; CI uses the deploy workflow
 
 ## Style
 
-- TypeScript, ES modules. No new runtime dependencies without discussion — the Worker is intentionally small.
+- TypeScript, ES modules. No new runtime dependencies without discussion, because the Worker is intentionally small.
 - Tests live next to the code (`*.test.ts`). Add coverage for new behavior.
 - Don't commit secrets or environment-specific values to `wrangler.toml` (`[vars]`). Use `wrangler secret put` and the dashboard.
 

@@ -24,14 +24,14 @@ Optional fields: `metadata` (object), `turnstile_token` (string, required if `TU
 
 Both examples expect the Worker to be reachable at a public URL. Set it via:
 
-- `signup-form.html` — edit the `API_URL` constant at the top of the inline `<script>`, **or** set a `data-api-url` attribute on the `<form>`.
-- `signup-form.js` — pass the URL as the second argument to `subscribe(...)`.
+- `signup-form.html`: edit the `API_URL` constant at the top of the inline `<script>`, **or** set a `data-api-url` attribute on the `<form>`.
+- `signup-form.js`: pass the URL as the second argument to `subscribe(...)`.
 
 If you set `CORS_ORIGIN` on the Worker, it must match the `Origin` of the page hosting the form. Otherwise the browser will block the request.
 
 ## Honeypot
 
-A hidden input named `website` is included in the HTML example and silently discarded server-side when filled. The full list of recognized honeypot keys (`website`, `url`, `company`, `hp`, `address`) lives in `worker/src/lib/validation.ts` — pick whichever name your real form is least likely to legitimately use.
+A hidden input named `website` is included in the HTML example and silently discarded server-side when filled. The full list of recognized honeypot keys (`website`, `url`, `company`, `hp`, `address`) lives in `worker/src/lib/validation.ts`. Pick whichever name your real form is least likely to legitimately use.
 
 ## Turnstile
 

@@ -7,6 +7,7 @@ const DOC_PATHS = [
   "DEPLOYING.md",
   "SECURITY.md",
   "examples/README.md",
+  "AGENTS.md",
 ];
 
 const README_BADGES = [

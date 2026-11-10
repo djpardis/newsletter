@@ -3,29 +3,31 @@
 ## Requirements
 
 - **Node** ≥ 20
-- **Cloudflare** account — install [Wrangler](https://developers.cloudflare.com/workers/wrangler/) and run `npx wrangler login`
-- **Resend** account — [verify a sending domain](https://resend.com/docs/dashboard/domains/introduction) and create an API key
+- **Cloudflare** account: install [Wrangler](https://developers.cloudflare.com/workers/wrangler/) and run `npx wrangler login`
+- **Resend** account: [verify a sending domain](https://resend.com/docs/dashboard/domains/introduction) and create an API key
 
 ## Install
 
+Local development needs no Cloudflare or Resend resources:
+
 ```bash
 npm install
-npx wrangler d1 create newsletter
-npx wrangler queues create newsletter-send
-npx wrangler d1 migrations apply newsletter --remote
+cp .dev.vars.example .dev.vars
+npx wrangler d1 migrations apply newsletter --local
+npm run dev
 ```
 
-Local development:
+The Worker runs at `http://localhost:8787`. With `RESEND_API_KEY` blank and a
+localhost `BASE_URL`, the Worker prints each email, including the confirmation
+link, to the dev log instead of sending it. `npm run smoke` runs these steps
+against `.dev.vars.example` and fails on any Worker error.
 
-```bash
-npx wrangler d1 migrations apply newsletter --local && npm run dev
-```
-
-Production checklist: [DEPLOYING.md](DEPLOYING.md).
+Production setup, including the D1 database, optional queue, secrets, and
+webhooks: [DEPLOYING.md](DEPLOYING.md).
 
 ## Configuration
 
-Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NAME>`) or **Variables** (`wrangler.toml` `[vars]` / dashboard). Runtime behavior is the same; Secrets stay out of tracked config.
+Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NAME>`) or **Variables** (`wrangler.toml` `[vars]` / dashboard). Runtime behavior is the same; Secrets remain out of tracked config.
 
 | Name | Required | Set with | Purpose |
 |------|----------|----------|---------|
@@ -52,10 +54,10 @@ Public routes on your Worker (`BASE_URL`). Subscriber flows use token links; adm
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/health` | — | Liveness check |
-| `POST` | `/api/subscribe` | — | Subscribe; see [examples/](examples/) |
-| `GET` | `/api/confirm` | — | Double opt-in confirmation |
-| `GET`, `POST` | `/api/unsubscribe` | — | One-click unsubscribe ([RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058)) |
+| `GET` | `/health` | none | Liveness check |
+| `POST` | `/api/subscribe` | none | Subscribe; see [examples/](examples/) |
+| `GET` | `/api/confirm` | none | Double opt-in confirmation |
+| `GET`, `POST` | `/api/unsubscribe` | none | One-click unsubscribe ([RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058)) |
 | `POST` | `/api/campaigns/send` | Bearer | Enqueue campaign to active subscribers |
 | `POST` | `/api/campaigns/test-send` | Bearer | Send one campaign to one test recipient |
 | `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |

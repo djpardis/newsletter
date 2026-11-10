@@ -27,5 +27,6 @@ Install, configuration, the HTTP API, and scripts: [SETUP.md](SETUP.md). Product
 ## Contributing and security
 
 - Contributions: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Coding agent instructions: [AGENTS.md](AGENTS.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - License: [MIT](LICENSE)
