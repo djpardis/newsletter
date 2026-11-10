@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- **Node** ≥ 20
+- **Node** 22 or newer
 - **Cloudflare** account: install [Wrangler](https://developers.cloudflare.com/workers/wrangler/) and run `npx wrangler login`
 - **Resend** account: [verify a sending domain](https://resend.com/docs/dashboard/domains/introduction) and create an API key
 

@@ -11,7 +11,7 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 
 ## Requirements
 
-- **Node** 20 or newer, for Wrangler and the campaign scripts
+- **Node** 22 or newer, for Wrangler and the campaign scripts
 - **Cloudflare** account with Workers, D1, and Queues, plus the [Wrangler](https://developers.cloudflare.com/workers/wrangler/) CLI
 - **Resend** account with a [verified sending domain](https://resend.com/docs/dashboard/domains/introduction)
 
