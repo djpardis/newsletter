@@ -31,8 +31,25 @@ non-interactive shell, such as a script or a coding agent, the prompt receives
 no input and Wrangler uploads an empty value. Pipe the value in or use the
 Cloudflare dashboard in that case.
 
-6. Check `GET {BASE_URL}/health`, then subscribe from your site and confirm the
-   confirmation email arrives.
+6. Verify the deployment, including a real confirmation email:
+
+```bash
+npm run verify -- --email you@example.com
+```
+
+`npm run verify` reads `BASE_URL` and `SITE_URL` from the Wrangler config (or
+`WRANGLER_CONFIG`), then checks `/health`, CORS for `SITE_URL`, server
+validation, and a real signup. The signup check passes only when Resend accepted
+the confirmation email, because the Worker returns an error when the send fails.
+Add the signup form to your site after this passes.
+
+Do not open a new custom domain in a browser, or query it with `curl` or `dig`,
+before it is deployed. DNS resolvers cache the "does not exist" answer for the
+zone's negative TTL, which is 30 minutes on Cloudflare, so an early lookup makes
+the signup form fail on that network even after the deploy succeeds.
+`npm run verify` asks the zone's authoritative nameservers instead, which do not
+cache answers, so it is safe to run at any time. If a lookup was already made,
+the form starts working on that network once the cached answer expires.
 
 `npm run deploy` stamps the current commit as `DEPLOY_SHA`, so the running
 Worker reports its source at `GET /health` (`{ "sha": "<short-sha>" }`). When

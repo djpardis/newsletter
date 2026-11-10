@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "check:public-identifiers": "tsx scripts/check-public-identifiers.ts",
     "check:docs": "tsx scripts/check-docs.ts",
-    "smoke": "bash scripts/smoke-local.sh"
+    "smoke": "bash scripts/smoke-local.sh",
+    "verify": "tsx scripts/verify-deployment.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250506.0",

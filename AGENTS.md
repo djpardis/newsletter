@@ -41,8 +41,12 @@ Follow [DEPLOYING.md](DEPLOYING.md) step by step.
   non-interactive shell. The prompt receives no input and Wrangler uploads an
   empty value. Pipe the value in, or ask the user to set it in the Cloudflare
   dashboard.
-- A deploy is done when `GET /health` reports the deployed commit and a test
-  signup delivers a confirmation email.
+- Do not curl, open, or `dig` a new custom domain before it is deployed.
+  Resolvers cache the "does not exist" answer for up to 30 minutes, which
+  breaks the signup form on that network after the deploy succeeds. Use
+  `npm run verify`, which asks the authoritative nameservers.
+- A deploy is done when `npm run verify -- --email <address>` passes and the
+  confirmation email has arrived.
 
 ## Public repository rules
 
