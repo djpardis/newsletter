@@ -171,6 +171,9 @@ export function validateCampaignSubject(
     .map((text) => `Campaign subject must not contain "${text}".`);
 }
 
+/** A campaign that breaks the house style or the unsubscribe requirement. */
+export class CampaignStyleError extends Error {}
+
 export function renderCampaignMarkdown(
   source: string,
   options: CampaignRenderOptions = {},
@@ -184,7 +187,7 @@ export function renderCampaignMarkdown(
   if (!slug) throw new Error("Missing campaign slug.");
   if (!subject) throw new Error("Missing campaign subject.");
   const subjectErrors = validateCampaignSubject(subject, rules);
-  if (subjectErrors.length > 0) throw new Error(subjectErrors.join("\n"));
+  if (subjectErrors.length > 0) throw new CampaignStyleError(subjectErrors.join("\n"));
   if (!typeRaw || !isCampaignType(typeRaw)) {
     throw new Error("Campaign type must be update, episode, or other.");
   }
@@ -195,7 +198,7 @@ export function renderCampaignMarkdown(
   }
 
   const errors = validateCampaignMarkdown(body, rules);
-  if (errors.length > 0) throw new Error(errors.join("\n"));
+  if (errors.length > 0) throw new CampaignStyleError(errors.join("\n"));
 
   return {
     slug,
@@ -238,11 +241,23 @@ export function renderCampaignMarkdownFile(
   file: string,
   options: CampaignRenderOptions = {},
 ): CampaignRenderResult {
-  return renderCampaignMarkdown(
-    expandCampaignFooterPlaceholder(readFileSync(file, "utf8"), file),
-    options,
-    loadCampaignRules(file),
-  );
+  const rulesFile = findTemplatesFile(file, "rules.json");
+  try {
+    return renderCampaignMarkdown(
+      expandCampaignFooterPlaceholder(readFileSync(file, "utf8"), file),
+      options,
+      loadCampaignRules(file),
+    );
+  } catch (e) {
+    if (!(e instanceof CampaignStyleError)) throw e;
+    const source = rulesFile
+      ? `These rules come from ${rulesFile}.`
+      : "These are the default house style rules. Start new campaigns from " +
+        "examples/campaigns/ in the newsletter repo, or add " +
+        "campaigns/_templates/rules.json to use your own rules. See " +
+        '"Campaign style" in SETUP.md.';
+    throw new CampaignStyleError(`${e.message}\n\n${source}`);
+  }
 }
 
 export function previewWithUnsubscribeUrl(

@@ -5,6 +5,7 @@
  *   npx tsx scripts/preview-campaign.ts --md campaigns/issue-12.md
  */
 import {
+  CampaignStyleError,
   previewWithUnsubscribeUrl,
   renderCampaignMarkdownFile,
 } from "./lib/campaign-content.js";
@@ -25,12 +26,19 @@ function main() {
     process.exit(1);
   }
 
-  const campaign = renderCampaignMarkdownFile(mdFile, {
-    slug: arg("--slug"),
-    subject: arg("--subject"),
-    type: arg("--type"),
-    kind: arg("--kind"),
-  });
+  let campaign;
+  try {
+    campaign = renderCampaignMarkdownFile(mdFile, {
+      slug: arg("--slug"),
+      subject: arg("--subject"),
+      type: arg("--type"),
+      kind: arg("--kind"),
+    });
+  } catch (e) {
+    if (!(e instanceof CampaignStyleError)) throw e;
+    console.error(e.message);
+    process.exit(1);
+  }
   const preview = previewWithUnsubscribeUrl(
     campaign,
     arg("--unsubscribe-url") ?? "https://newsletter.example.com/api/unsubscribe?token=PREVIEW",

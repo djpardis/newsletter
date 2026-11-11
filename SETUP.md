@@ -101,8 +101,13 @@ The fastest path is `send-test.ts`: it reads `NEWSLETTER_API_URL`, `ADMIN_BEARER
 
 Before sending, `send-test.ts` and `send-campaign.ts` compare the deployed Worker's `/health` SHA to your local `git HEAD` and refuse to send against a stale deployment (deploy first, or pass `--skip-version-check`). See [DEPLOYING.md](DEPLOYING.md) for keeping the Worker in sync.
 
+## Campaign style
+
 Campaign Markdown must include the `{{unsubscribe_url}}` link and, by
-default, follow the house style. A campaign opens with "Hey,", ends with
+default, follow the house style. To start a new list, copy
+[examples/campaigns/](examples/campaigns/) into your site repository as
+`campaigns/` and replace the sender name, tagline, and newsletter name in
+`campaigns/_templates/footer.md`. A campaign opens with "Hey,", ends with
 "More soon.", a signature line, an italic tagline, and a footer, and its
 subject does not contain an em dash:
 

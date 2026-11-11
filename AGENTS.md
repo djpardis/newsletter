@@ -47,6 +47,10 @@ Follow [DEPLOYING.md](DEPLOYING.md) step by step.
   `npm run verify`, which asks the authoritative nameservers.
 - A deploy is done when `npm run verify -- --email <address>` passes and the
   confirmation email has arrived.
+- When setting up campaigns for a new list, copy `examples/campaigns/` into the
+  site repository. Ask the operator for the sender name and tagline instead of
+  writing your own, and do not add a `rules.json` unless the operator wants a
+  different house style.
 
 ## Public repository rules
 

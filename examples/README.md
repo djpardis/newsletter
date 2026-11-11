@@ -19,6 +19,7 @@ Optional fields: `metadata` (object), `turnstile_token` (string, required if `TU
 |------|---------------|
 | `signup-form.html` | Drop-in HTML/CSS/JS form. Sends JSON to the API, handles all documented error states, includes a honeypot, and (optionally) a Cloudflare Turnstile widget. |
 | `signup-form.js` | Just the fetch logic, ready to paste into an existing component or template. |
+| `campaigns/` | Starter campaign folder in the default house style. Copy it into your site repository and fill in the sender name, tagline, and newsletter name in `_templates/footer.md`. See [Campaign style](../SETUP.md#campaign-style). |
 
 ## Configuration
 

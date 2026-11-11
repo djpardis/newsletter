@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { renderCampaignMarkdownFile } from "./lib/campaign-content.js";
+import { CampaignStyleError, renderCampaignMarkdownFile } from "./lib/campaign-content.js";
 import { runD1Sql } from "./lib/wrangler-d1.js";
 import { assertWorkerUpToDate } from "./lib/version-guard.js";
 
@@ -130,7 +130,7 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e);
+  console.error(e instanceof CampaignStyleError ? e.message : e);
   process.exit(1);
 });
 

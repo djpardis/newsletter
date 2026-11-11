@@ -112,6 +112,23 @@ describe("campaign-content", () => {
     expect(() => renderCampaignMarkdownFile(file)).toThrow('Campaign body must start with "Hey,".');
   });
 
+  it("explains where the default rules come from when a campaign breaks them", () => {
+    const root = mkdtempSync(join(tmpdir(), "newsletter-hint-test-"));
+    mkdirSync(join(root, "campaigns"), { recursive: true });
+    const file = join(root, "campaigns", "issue.md");
+    writeFileSync(file, goodCampaign.replace("Hey,", "Hello,"), "utf8");
+
+    expect(() => renderCampaignMarkdownFile(file)).toThrow("These are the default house style rules.");
+  });
+
+  it("accepts the starter campaign in examples/campaigns", () => {
+    const file = join(process.cwd(), "examples", "campaigns", "_templates", "post.md");
+    const campaign = renderCampaignMarkdownFile(file);
+
+    expect(campaign.text).toContain("- Sender name");
+    expect(campaign.text).toContain("No longer interested? Unsubscribe → ({{unsubscribe_url}})");
+  });
+
   it("lets an empty rules file turn the house style off", () => {
     const root = mkdtempSync(join(tmpdir(), "newsletter-empty-rules-test-"));
     const templatesDir = join(root, "campaigns", "_templates");
