@@ -45,6 +45,7 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 | `SITE_NAME` | optional | `[vars]` | Brand name in emails (default: `Newsletter`) |
 | `CONFIRM_EMAIL_SUBJECT` | optional | `[vars]` | Confirmation email subject (default: `Confirm your subscription to <SITE_NAME>`) |
 | `CONFIRMED_PAGE_HEADING` | optional | `[vars]` | Title and heading of the page shown after confirming (default: `Confirmed`) |
+| `WELCOME_CAMPAIGN_SLUG` | optional | `[vars]` | Slug of a campaign sent to each subscriber after they confirm (unset: no welcome email). See [Welcome email](#welcome-email) |
 | `COMPANY_ADDRESS` | optional | `[vars]` | Postal line in campaign footers (CAN-SPAM/CASL) |
 | `UNSUBSCRIBE_MAILTO` | optional | `[vars]` | Mailto address for `List-Unsubscribe` header |
 
@@ -120,3 +121,27 @@ Markdown file, and every rule is optional:
 `campaigns/_templates/footer.md` before validation.
 
 For the explicit two-step flow, create a campaign from reviewed Markdown with `create-campaign.ts`, send a one-off test with `send-test-campaign.ts`, then production send with `send-campaign.ts --reviewed`. Test sends do not update campaign delivery metrics; recipients still get real unsubscribe links.
+
+## Welcome email
+
+Set `WELCOME_CAMPAIGN_SLUG` to send a campaign to each subscriber right after
+they confirm. The welcome email is an ordinary campaign, so it is written,
+created, and tested with the same scripts as any other campaign:
+
+```bash
+npx tsx scripts/create-campaign.ts --md campaigns/welcome.md --slug welcome
+npx tsx scripts/send-test-campaign.ts --id <campaign id> --to you@example.com
+```
+
+After the test email looks right, set `WELCOME_CAMPAIGN_SLUG = "welcome"` in
+`[vars]` and deploy. Confirming then queues the campaign for the new
+subscriber on the same send queue as regular campaigns, so it gets the same
+retries, unsubscribe link, and delivery row. The confirmation page does not
+wait for the send. A subscriber who already received the welcome campaign,
+for example after unsubscribing and joining again, does not receive it a
+second time. If the slug does not match a campaign, confirming still succeeds
+and a `welcome_campaign_missing` audit event is recorded.
+
+Campaign slugs are unique, so to change the welcome email, create a new
+campaign with a new slug such as `welcome-2` and point `WELCOME_CAMPAIGN_SLUG`
+at it. Subscribers who confirm after the change receive the new version.

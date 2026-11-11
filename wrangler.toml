@@ -11,6 +11,7 @@ crons = ["17 3 * * *"]
 # SITE_NAME = "Our Newsletter"
 # CONFIRM_EMAIL_SUBJECT = "Confirm your subscription to Our Newsletter"
 # CONFIRMED_PAGE_HEADING = "Confirmed"
+# WELCOME_CAMPAIGN_SLUG = "welcome"
 # CORS_ORIGIN = "https://your-public-site.com"
 
 [[d1_databases]]

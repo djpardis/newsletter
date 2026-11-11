@@ -54,7 +54,7 @@ export default {
       }
 
       if (request.method === "GET" && path === "/api/confirm") {
-        return handleConfirm(request, env);
+        return handleConfirm(request, env, ctx);
       }
 
       if (path === "/api/unsubscribe") {

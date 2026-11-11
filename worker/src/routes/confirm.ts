@@ -2,10 +2,12 @@ import type { Env } from "../types.js";
 import { audit } from "../lib/audit.js";
 import { sha256Hex, randomTokenHex } from "../lib/crypto.js";
 import { confirmOkPage } from "../lib/templates.js";
+import { sendWelcomeCampaign } from "../lib/welcome.js";
 
 export async function handleConfirm(
   request: Request,
   env: Env,
+  ctx?: ExecutionContext,
 ): Promise<Response> {
   const url = new URL(request.url);
   const raw = url.searchParams.get("token") ?? "";
@@ -50,6 +52,12 @@ export async function handleConfirm(
   ]);
 
   audit(env.DB, "subscriber_confirmed", row.subscriber_id, { email: row.email }, now).catch(console.error);
+
+  const welcome = sendWelcomeCampaign(env, row.subscriber_id, now).catch((e) => {
+    console.error("welcome_failed:", e);
+  });
+  if (ctx) ctx.waitUntil(welcome);
+  else await welcome;
 
   return new Response(confirmOkPage(env), {
     status: 200,

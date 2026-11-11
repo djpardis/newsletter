@@ -17,6 +17,11 @@ export interface Env {
   CONFIRM_EMAIL_SUBJECT?: string;
   /** Title and heading of the page shown after confirming (default: "Confirmed") */
   CONFIRMED_PAGE_HEADING?: string;
+  /**
+   * Slug of a campaign to send to each subscriber when they confirm. Unset
+   * disables the welcome email. Create the campaign with create-campaign.ts.
+   */
+  WELCOME_CAMPAIGN_SLUG?: string;
   /** Optional mailto for List-Unsubscribe (e.g. list-unsubscribe@yourdomain.com) */
   UNSUBSCRIBE_MAILTO?: string;
   /** Allowed origin for CORS (default: mirror request Origin or *) */
