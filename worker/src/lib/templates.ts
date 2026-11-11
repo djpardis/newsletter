@@ -14,7 +14,7 @@ export function siteUrl(env: Env): string {
   return (env.SITE_URL ?? env.BASE_URL).replace(/\/$/, "");
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -37,14 +37,19 @@ export function confirmEmail(
   return { subject, html, text };
 }
 
-function okPageShell(title: string, heading: string, body: string, _env: Env): string {
+/** Minimal standalone page. `bodyHtml` is inserted as is, so escape any user values first. */
+export function pageShell(title: string, heading: string, bodyHtml: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title>
-  <style>*{box-sizing:border-box}html{font-size:16px}body{font-family:system-ui,sans-serif;line-height:1.6;margin:0;padding:clamp(1.5rem,7vw,3rem) 1rem;background:#fff;color:#111;-webkit-text-size-adjust:100%}main{width:min(100%,36rem);margin:0 auto}h1{font-size:clamp(1.5rem,7vw,2rem);line-height:1.2;font-weight:600;margin:0 0 .75rem}p{font-size:clamp(1rem,4.5vw,1.125rem);margin:.5rem 0;color:#444}a{color:inherit;overflow-wrap:anywhere}</style>
+  <style>*{box-sizing:border-box}html{font-size:16px}body{font-family:system-ui,sans-serif;line-height:1.6;margin:0;padding:clamp(1.5rem,7vw,3rem) 1rem;background:#fff;color:#111;-webkit-text-size-adjust:100%}main{width:min(100%,36rem);margin:0 auto}h1{font-size:clamp(1.5rem,7vw,2rem);line-height:1.2;font-weight:600;margin:0 0 .75rem}p{font-size:clamp(1rem,4.5vw,1.125rem);margin:.5rem 0;color:#444}a{color:inherit;overflow-wrap:anywhere}button{font:inherit;font-weight:600;margin-top:1rem;padding:.75rem 1.25rem;min-height:44px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}</style>
   </head>
   <body><main>
   <h1>${escapeHtml(heading)}</h1>
-  <p>${body}</p>
+  ${bodyHtml}
   </main></body></html>`;
+}
+
+function okPageShell(title: string, heading: string, body: string, _env: Env): string {
+  return pageShell(title, heading, `<p>${body}</p>`);
 }
 
 export function confirmOkPage(env: Env): string {

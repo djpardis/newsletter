@@ -25,7 +25,7 @@ function canonicalEmail(email: string): string {
   return lower;
 }
 
-function isKind(k: string): k is CampaignKind {
+export function isKind(k: string): k is CampaignKind {
   return k === "new_post" || k === "new_show" || k === "manual";
 }
 
@@ -82,8 +82,29 @@ export async function handleCampaignSend(
 
   if (!campaign) return Response.json({ error: "campaign_not_found" }, { status: 404 });
 
-  // Skip subscribers who already have a delivery row for this campaign so the
-  // handler is safe to re-run after a partial failure without double-sending.
+  return Response.json({ ok: true, ...(await deliverCampaign(env, campaign, now)) });
+}
+
+interface CampaignToSend {
+  id: string;
+  subject: string;
+  html_body: string;
+  text_body: string;
+}
+
+export type DeliverResult =
+  | { campaign_id: string; queued: number }
+  | { campaign_id: string; recipients: number; sent: number; failed: number };
+
+/**
+ * Active subscribers without a delivery row for this campaign, one per
+ * canonical address. Skipping existing rows makes sends safe to re-run after
+ * a partial failure.
+ */
+export async function pendingRecipients(
+  env: Env,
+  campaignId: string,
+): Promise<{ id: string; email: string; unsubscribe_token: string }[]> {
   const subs = await env.DB.prepare(
     `SELECT s.id, s.email, s.unsubscribe_token
      FROM subscribers s
@@ -100,12 +121,20 @@ export async function handleCampaignSend(
 
   // Deduplicate by canonical email so Gmail +alias addresses don't get multiple copies
   const seen = new Set<string>();
-  const rows = (subs.results ?? []).filter((sub) => {
+  return (subs.results ?? []).filter((sub) => {
     const key = canonicalEmail(sub.email);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+}
+
+export async function deliverCampaign(
+  env: Env,
+  campaign: CampaignToSend,
+  now: number,
+): Promise<DeliverResult> {
+  const rows = await pendingRecipients(env, campaign.id);
   // --- Queue path (production) ---
   // Enqueue one message per subscriber and return immediately.
   // The queue consumer handles delivery and writes delivery rows.
@@ -120,11 +149,7 @@ export async function handleCampaignSend(
 
     await audit(env.DB, "campaign_enqueued", null, { campaign_id: campaign.id, queued: rows.length }, now);
 
-    return Response.json({
-      ok: true,
-      campaign_id: campaign.id,
-      queued: rows.length,
-    });
+    return { campaign_id: campaign.id, queued: rows.length };
   }
 
   // --- Inline path (local dev fallback, no queue binding configured) ---
@@ -169,13 +194,7 @@ export async function handleCampaignSend(
 
   await audit(env.DB, "campaign_sent", null, { campaign_id: campaign.id, sent, failed }, now);
 
-  return Response.json({
-    ok: true,
-    campaign_id: campaign.id,
-    recipients: rows.length,
-    sent,
-    failed,
-  });
+  return { campaign_id: campaign.id, recipients: rows.length, sent, failed };
 }
 
 export async function handleCampaignTestSend(

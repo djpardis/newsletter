@@ -46,6 +46,7 @@ Bind each `env.<NAME>` from Cloudflare **Secrets** (`npx wrangler secret put <NA
 | `CONFIRM_EMAIL_SUBJECT` | optional | `[vars]` | Confirmation email subject (default: `Confirm your subscription to <SITE_NAME>`) |
 | `CONFIRMED_PAGE_HEADING` | optional | `[vars]` | Title and heading of the page shown after confirming (default: `Confirmed`) |
 | `WELCOME_CAMPAIGN_SLUG` | optional | `[vars]` | Slug of a campaign sent to each subscriber after they confirm (unset: no welcome email). See [Welcome email](#welcome-email) |
+| `REVIEW_EMAIL` | optional | `[vars]` | Recipient of review emails from `request-approval.ts` (default: `REPLY_TO`). See [Review and send by email](#review-and-send-by-email) |
 | `COMPANY_ADDRESS` | optional | `[vars]` | Postal line in campaign footers (CAN-SPAM/CASL) |
 | `UNSUBSCRIBE_MAILTO` | optional | `[vars]` | Mailto address for `List-Unsubscribe` header |
 
@@ -63,6 +64,8 @@ Public routes on your Worker (`BASE_URL`). Subscriber flows use token links; adm
 | `GET`, `POST` | `/api/unsubscribe` | none | One-click unsubscribe ([RFC 8058](https://datatracker.ietf.org/doc/html/rfc8058)) |
 | `POST` | `/api/campaigns/send` | Bearer | Enqueue campaign to active subscribers |
 | `POST` | `/api/campaigns/test-send` | Bearer | Send one campaign to one test recipient |
+| `POST` | `/api/campaigns/request-approval` | Bearer | Create an unsent campaign and email the reviewer a one-time send link |
+| `GET`, `POST` | `/api/campaigns/approve` | one-time token | Show the send confirmation page (`GET`) and send the campaign (`POST`) |
 | `POST` | `/api/webhooks/resend` | Svix | Handle bounce and complaint events |
 | `POST` | `/api/admin/delete` | Bearer | Hard-delete a subscriber (GDPR) |
 | `POST` | `/api/admin/weekly-digest/test-send` | Bearer | Send the weekly operator digest immediately |
@@ -95,6 +98,7 @@ npx tsx scripts/create-campaign.ts --md post.md --slug s --subject "..." --kind 
 npx tsx scripts/send-test.ts --md post.md --to you@example.com   # create + test-send in one step
 npx tsx scripts/send-test-campaign.ts      # POST /api/campaigns/test-send (needs --id)
 npx tsx scripts/send-campaign.ts           # POST /api/campaigns/send (requires --reviewed)
+npx tsx scripts/request-approval.ts --md post.md   # email a review copy with a one-time send link
 ```
 
 The fastest path is `send-test.ts`: it reads `NEWSLETTER_API_URL`, `ADMIN_BEARER_TOKEN`, and `NEWSLETTER_D1_NAME` from a local `.env` (gitignored), creates the campaign from Markdown with a unique dated slug, and immediately test-sends to any `--to` address. Pass `--id <uuid>` instead of `--md` to reuse an existing campaign. Shell-exported env vars override `.env`.
@@ -171,3 +175,28 @@ and a `welcome_campaign_missing` audit event is recorded.
 Campaign slugs are unique, so to change the welcome email, create a new
 campaign with a new slug such as `welcome-2` and point `WELCOME_CAMPAIGN_SLUG`
 at it. Subscribers who confirm after the change receive the new version.
+
+## Review and send by email
+
+`request-approval.ts` lets the operator review a campaign in their inbox and
+send it from there, without running a send command:
+
+```bash
+npx tsx scripts/request-approval.ts --md campaigns/issue-12.md
+```
+
+The script renders the Markdown with the campaign style rules and posts it to
+`POST /api/campaigns/request-approval`. The Worker creates the campaign
+without sending it and emails a review copy to `REVIEW_EMAIL`, or to
+`REPLY_TO` when `REVIEW_EMAIL` is unset. The review copy is the real campaign
+with a notice at the top and a "Review and send" link. Opening the link shows
+the subject and the number of active subscribers, and nothing is sent until
+the reviewer presses the send button on that page. The send then uses the same
+queue, delivery rows, and duplicate protection as `send-campaign.ts`.
+
+Each link works once and expires after 7 days. Only a SHA-256 of the token is
+stored. A slug that already has a campaign is skipped, so a site can call the
+script for every post on each deploy and only new posts produce review emails.
+Pass `--refresh` to replace the content of an unsent campaign and send a new
+link, which also invalidates the old one. Pass `--to <address>` to send the
+review copy somewhere other than the default reviewer.

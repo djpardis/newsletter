@@ -22,6 +22,11 @@ export interface Env {
    * disables the welcome email. Create the campaign with create-campaign.ts.
    */
   WELCOME_CAMPAIGN_SLUG?: string;
+  /**
+   * Address that receives review emails from /api/campaigns/request-approval.
+   * Falls back to REPLY_TO.
+   */
+  REVIEW_EMAIL?: string;
   /** Optional mailto for List-Unsubscribe (e.g. list-unsubscribe@yourdomain.com) */
   UNSUBSCRIBE_MAILTO?: string;
   /** Allowed origin for CORS (default: mirror request Origin or *) */

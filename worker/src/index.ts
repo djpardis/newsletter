@@ -7,6 +7,7 @@ import { handleSubscribe } from "./routes/subscribe.js";
 import { handleConfirm } from "./routes/confirm.js";
 import { handleUnsubscribe } from "./routes/unsubscribe.js";
 import { handleCampaignSend, handleCampaignTestSend } from "./routes/campaigns.js";
+import { handleApprovePage, handleApproveSend, handleRequestApproval } from "./routes/approval.js";
 import { handleResendWebhook } from "./routes/webhooks.js";
 import { health } from "./routes/health.js";
 import { sendWeeklyDigest, shouldSendWeeklyDigest } from "./lib/weekly-digest.js";
@@ -70,6 +71,16 @@ export default {
 
       if (request.method === "POST" && path === "/api/campaigns/test-send") {
         return handleCampaignTestSend(request, env);
+      }
+
+      if (request.method === "POST" && path === "/api/campaigns/request-approval") {
+        return handleRequestApproval(request, env);
+      }
+
+      if (path === "/api/campaigns/approve") {
+        if (request.method === "GET") return handleApprovePage(request, env);
+        if (request.method === "POST") return handleApproveSend(request, env);
+        return new Response("Method Not Allowed", { status: 405 });
       }
 
       if (request.method === "POST" && path === "/api/webhooks/resend") {

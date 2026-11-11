@@ -19,6 +19,7 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 
 - **No web UI.** Deploy with Wrangler, run list operations through the Bearer-protected HTTP API or the TypeScript scripts in `scripts/`, and implement signup on your site ([examples/](examples/)).
 - **Campaign sends are async.** `POST /api/campaigns/send` queues delivery and responds right away with how many recipients were queued. It does not wait for Resend to accept or deliver each message.
+- **Review and send by email.** `request-approval.ts` emails the operator a review copy of a campaign with a one-time link, and the campaign goes to subscribers only after the operator presses send on that page ([Review and send by email](SETUP.md#review-and-send-by-email)).
 - **Optional welcome email.** Set `WELCOME_CAMPAIGN_SLUG` to send a reviewed campaign to each subscriber after they confirm.
 - **Campaigns follow a house style by default.** The scripts refuse a campaign that does not open with "Hey," and end with the shared footer. Start from [examples/campaigns/](examples/campaigns/), or replace the rules with your own `rules.json` ([Campaign style](SETUP.md#campaign-style)).
 - **No open or click tracking.** Opens and clicks are not tracked. Bounces and complaints update subscriber status in D1 only when Resend webhooks are enabled.
