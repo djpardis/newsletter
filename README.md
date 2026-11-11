@@ -21,7 +21,7 @@ A small HTTP API for running your own mailing list: double opt-in signups, one-c
 - **Campaign sends are async.** `POST /api/campaigns/send` queues delivery and responds right away with how many recipients were queued. It does not wait for Resend to accept or deliver each message.
 - **Review and send by email.** `request-approval.ts` emails the operator a review copy of a campaign with a one-time link, and the campaign goes to subscribers only after the operator presses send on that page ([Review and send by email](SETUP.md#review-and-send-by-email)).
 - **Optional welcome email.** Set `WELCOME_CAMPAIGN_SLUG` to send a reviewed campaign to each subscriber after they confirm.
-- **Campaigns follow a house style by default.** The scripts refuse a campaign that does not open with "Hey," and end with the shared footer. Start from [examples/campaigns/](examples/campaigns/), or replace the rules with your own `rules.json` ([Campaign style](SETUP.md#campaign-style)).
+- **A default campaign style that you can change.** The starter campaigns in [examples/campaigns/](examples/campaigns/) open with "Hey," and end with a shared footer, and the scripts check new campaigns against that style. Add a `rules.json` to set your own rules, or an empty one to skip the checks ([Campaign style](SETUP.md#campaign-style)).
 - **No open or click tracking.** Opens and clicks are not tracked. Bounces and complaints update subscriber status in D1 only when Resend webhooks are enabled.
 - **You own the list.** Subscriber data stays in your D1 database under your Cloudflare account.
 

@@ -107,8 +107,9 @@ Before sending, `send-test.ts` and `send-campaign.ts` compare the deployed Worke
 
 ## Campaign style
 
-Campaign Markdown must include the `{{unsubscribe_url}}` link and, by
-default, follow the house style. To start a new list, copy
+Every campaign includes the `{{unsubscribe_url}}` link, and the scripts check
+campaigns against a default house style that you can change. To start a new
+list, copy
 [examples/campaigns/](examples/campaigns/) into your site repository as
 `campaigns/` and replace the sender name, tagline, and newsletter name in
 `campaigns/_templates/footer.md`. A campaign opens with "Hey,", ends with
