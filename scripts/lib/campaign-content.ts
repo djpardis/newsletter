@@ -103,6 +103,7 @@ function mdToText(md: string): string {
     .replace(/^[-*+]\s+/gm, "- ")
     .replace(/^\d+\.\s+/gm, "")
     .replace(/^>{1,}\s?/gm, "")
+    .replace(/\\([\\`*_{}[\]()#+\-.!>|~])/g, "$1")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

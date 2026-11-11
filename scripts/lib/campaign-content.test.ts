@@ -66,6 +66,16 @@ describe("campaign-content", () => {
     );
   });
 
+  it("removes Markdown escapes from the plain text fallback", () => {
+    const campaign = renderCampaignMarkdown(
+      goodCampaign.replace("Example Sender  \n*A short", "\\- Example Sender  \n*A short"),
+    );
+
+    expect(campaign.html).toContain("<p>- Example Sender<br>");
+    expect(campaign.text).toContain("\n- Example Sender");
+    expect(campaign.text).not.toContain("\\-");
+  });
+
   it("replaces unsubscribe placeholders in preview output", () => {
     const campaign = renderCampaignMarkdown(goodCampaign);
     const preview = previewWithUnsubscribeUrl(
