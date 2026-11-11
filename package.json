@@ -17,7 +17,7 @@
     "verify": "tsx scripts/verify-deployment.ts"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250506.0",
+    "@cloudflare/workers-types": "^5.20261110.1",
     "@eslint/js": "^9.25.0",
     "@types/node": "^22.14.0",
     "eslint": "^9.25.0",
@@ -25,7 +25,7 @@
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.0",
-    "vitest": "^3.1.2",
-    "wrangler": "^4.14.0"
+    "vitest": "^4.1.12",
+    "wrangler": "^4.160.0"
   }
 }
