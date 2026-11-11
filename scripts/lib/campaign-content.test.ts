@@ -33,7 +33,7 @@ This is a [link](https://example.com).
 
 More soon.
 
-Example Sender  
+\u2014 Example Sender  
 *A short tagline.*
 
 You're receiving this because you subscribed to Example Sender.  
@@ -68,7 +68,7 @@ describe("campaign-content", () => {
 
   it("removes Markdown escapes from the plain text fallback", () => {
     const campaign = renderCampaignMarkdown(
-      goodCampaign.replace("Example Sender  \n*A short", "\\- Example Sender  \n*A short"),
+      goodCampaign.replace("\u2014 Example Sender", "\\- Example Sender"),
     );
 
     expect(campaign.html).toContain("<p>- Example Sender<br>");
@@ -91,15 +91,39 @@ describe("campaign-content", () => {
     );
   });
 
-  it("requires only the unsubscribe link by default", () => {
-    expect(validateCampaignMarkdown(goodCampaign.split("---\n\n")[1] ?? "")).toEqual([]);
-    expect(validateCampaignMarkdown("Hello")).toEqual([
-      "Campaign body must include {{unsubscribe_url}}.",
+  it("applies the house style by default", () => {
+    const body = goodCampaign.split("---\n\n")[1] ?? "";
+    expect(validateCampaignMarkdown(body)).toEqual([]);
+    expect(validateCampaignMarkdown(body.replace("\u2014 Example", "\\- Example"))).toEqual([]);
+    expect(validateCampaignMarkdown(`Hello\n${body}`)).toContain('Campaign body must start with "Hey,".');
+    expect(validateCampaignMarkdown(body.replace("More soon.", "Bye.")).join("\n")).toContain("More soon.");
+    expect(validateCampaignMarkdown("Hello")).toContain("Campaign body must include {{unsubscribe_url}}.");
+    expect(validateCampaignSubject("Update \u2014 May")).toEqual([
+      'Campaign subject must not contain "\u2014".',
     ]);
-    expect(validateCampaignSubject("Update \u2014 May")).toEqual([]);
   });
 
-  it("applies optional house rules", () => {
+  it("uses the house style when no rules file exists", () => {
+    const root = mkdtempSync(join(tmpdir(), "newsletter-default-rules-test-"));
+    mkdirSync(join(root, "campaigns"), { recursive: true });
+    const file = join(root, "campaigns", "issue.md");
+    writeFileSync(file, goodCampaign.replace("Hey,", "Hello,"), "utf8");
+
+    expect(() => renderCampaignMarkdownFile(file)).toThrow('Campaign body must start with "Hey,".');
+  });
+
+  it("lets an empty rules file turn the house style off", () => {
+    const root = mkdtempSync(join(tmpdir(), "newsletter-empty-rules-test-"));
+    const templatesDir = join(root, "campaigns", "_templates");
+    mkdirSync(templatesDir, { recursive: true });
+    writeFileSync(join(templatesDir, "rules.json"), "{}", "utf8");
+    const file = join(root, "campaigns", "issue.md");
+    writeFileSync(file, goodCampaign.replace("Hey,", "Hello,"), "utf8");
+
+    expect(renderCampaignMarkdownFile(file).text).toContain("Hello,");
+  });
+
+  it("applies custom rules in place of the defaults", () => {
     const body = goodCampaign.split("---\n\n")[1] ?? "";
     expect(validateCampaignMarkdown(body, houseRules)).toEqual([]);
     expect(validateCampaignMarkdown(`Hello\n${body}`, houseRules)).toContain(
@@ -113,7 +137,7 @@ describe("campaign-content", () => {
     ]);
   });
 
-  it("loads house rules from the campaign templates folder", () => {
+  it("loads custom rules from the campaign templates folder", () => {
     const root = mkdtempSync(join(tmpdir(), "newsletter-rules-test-"));
     const templatesDir = join(root, "campaigns", "_templates");
     mkdirSync(templatesDir, { recursive: true });

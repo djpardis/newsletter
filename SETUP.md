@@ -101,10 +101,31 @@ The fastest path is `send-test.ts`: it reads `NEWSLETTER_API_URL`, `ADMIN_BEARER
 
 Before sending, `send-test.ts` and `send-campaign.ts` compare the deployed Worker's `/health` SHA to your local `git HEAD` and refuse to send against a stale deployment (deploy first, or pass `--skip-version-check`). See [DEPLOYING.md](DEPLOYING.md) for keeping the Worker in sync.
 
-Campaign Markdown must include the `{{unsubscribe_url}}` link. To enforce a
-house style as well, add `campaigns/_templates/rules.json` next to your
-campaigns. The scripts read it from the nearest `_templates` folder above the
-Markdown file, and every rule is optional:
+Campaign Markdown must include the `{{unsubscribe_url}}` link and, by
+default, follow the house style. A campaign opens with "Hey,", ends with
+"More soon.", a signature line, an italic tagline, and a footer, and its
+subject does not contain an em dash:
+
+```markdown
+Hey,
+
+The campaign body.
+
+More soon.
+
+\- Sender name  
+*Tagline*
+
+You're receiving this because you subscribed to Sender name.  
+No longer interested? [Unsubscribe →]({{unsubscribe_url}})
+```
+
+The signature line can start with an em dash or an escaped hyphen (`\-`),
+which keeps Markdown from turning it into a list item. To use a different
+house style, add `campaigns/_templates/rules.json` next to your campaigns. The
+scripts read it from the nearest `_templates` folder above the Markdown file,
+and it replaces the default rules entirely. An empty `{}` file turns the house
+style off, while the unsubscribe link is always required:
 
 ```json
 {

@@ -109,9 +109,10 @@ function mdToText(md: string): string {
 }
 
 /**
- * Optional house-style rules, read from `campaigns/_templates/rules.json` next
- * to the campaign file. Without that file, only the unsubscribe link is
- * required.
+ * House-style rules for campaign Markdown. `DEFAULT_CAMPAIGN_RULES` apply
+ * unless `campaigns/_templates/rules.json` exists next to the campaign file,
+ * in which case that file replaces them. An empty `{}` rules file turns the
+ * house style off; the unsubscribe link is always required.
  */
 export interface CampaignRules {
   /** Text the campaign body must start with, such as "Hey,". */
@@ -122,7 +123,29 @@ export interface CampaignRules {
   subjectMustNotContain?: string[];
 }
 
-export function validateCampaignMarkdown(md: string, rules: CampaignRules = {}): string[] {
+export const DEFAULT_CAMPAIGN_RULES: CampaignRules = {
+  startsWith: "Hey,",
+  patterns: [
+    {
+      pattern: "\\nMore soon\\.\\n\\n(\u2014 |\\\\- ).+[ ]{2}\\n\\*.+\\*\\n",
+      message: 'Campaign body must include the closing "More soon.", then a signature line, then an italic tagline.',
+    },
+    {
+      pattern: "You're receiving this because you subscribed to .+\\.[ ]{2}\\nNo longer interested\\?",
+      message: 'Campaign footer must include "You\'re receiving this because you subscribed to <Name>." followed by "No longer interested?".',
+    },
+    {
+      pattern: "\\[Unsubscribe →\\]\\(\\{\\{unsubscribe_url\\}\\}\\)",
+      message: 'Campaign body must link "Unsubscribe →" to {{unsubscribe_url}}.',
+    },
+  ],
+  subjectMustNotContain: ["\u2014"],
+};
+
+export function validateCampaignMarkdown(
+  md: string,
+  rules: CampaignRules = DEFAULT_CAMPAIGN_RULES,
+): string[] {
   const errors: string[] = [];
   const trimmed = md.trim();
 
@@ -139,7 +162,10 @@ export function validateCampaignMarkdown(md: string, rules: CampaignRules = {}):
   return errors;
 }
 
-export function validateCampaignSubject(subject: string, rules: CampaignRules = {}): string[] {
+export function validateCampaignSubject(
+  subject: string,
+  rules: CampaignRules = DEFAULT_CAMPAIGN_RULES,
+): string[] {
   return (rules.subjectMustNotContain ?? [])
     .filter((text) => subject.includes(text))
     .map((text) => `Campaign subject must not contain "${text}".`);
@@ -148,7 +174,7 @@ export function validateCampaignSubject(subject: string, rules: CampaignRules = 
 export function renderCampaignMarkdown(
   source: string,
   options: CampaignRenderOptions = {},
-  rules: CampaignRules = {},
+  rules: CampaignRules = DEFAULT_CAMPAIGN_RULES,
 ): CampaignRenderResult {
   const { data, body } = parseFrontmatter(source);
   const slug = options.slug ?? data.slug;
@@ -204,7 +230,7 @@ export function expandCampaignFooterPlaceholder(source: string, markdownFile: st
 
 export function loadCampaignRules(markdownFile: string): CampaignRules {
   const rulesFile = findTemplatesFile(markdownFile, "rules.json");
-  if (!rulesFile) return {};
+  if (!rulesFile) return DEFAULT_CAMPAIGN_RULES;
   return JSON.parse(readFileSync(rulesFile, "utf8")) as CampaignRules;
 }
 
