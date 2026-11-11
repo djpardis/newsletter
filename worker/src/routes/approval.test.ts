@@ -152,6 +152,15 @@ describe("campaign approval", () => {
     expect(after.status).toBe("already_sent");
   });
 
+  it("sends one copy per Gmail inbox, to the plain address", async () => {
+    addSubscriber(db, "a0", "sample.user+test@gmail.com");
+    addSubscriber(db, "a1", "sampleuser@gmail.com");
+    await handleRequestApproval(requestApproval(payload), env);
+    await handleApproveSend(approvePost(approvalToken()), env);
+
+    expect(queue.map((m) => m.subscriber_id).sort()).toEqual(["a1", "s1", "s2"]);
+  });
+
   it("refuses expired and unknown links", async () => {
     await handleRequestApproval(requestApproval(payload), env);
     const token = approvalToken();

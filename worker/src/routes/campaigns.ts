@@ -119,14 +119,16 @@ export async function pendingRecipients(
     unsubscribe_token: string;
   }>();
 
-  // Deduplicate by canonical email so Gmail +alias addresses don't get multiple copies
-  const seen = new Set<string>();
-  return (subs.results ?? []).filter((sub) => {
+  // Deduplicate by canonical email so Gmail +alias addresses don't get multiple
+  // copies. When several addresses share an inbox, send to the one closest to
+  // the canonical form, so the plain address wins over a +alias.
+  const chosen = new Map<string, { id: string; email: string; unsubscribe_token: string }>();
+  for (const sub of subs.results ?? []) {
     const key = canonicalEmail(sub.email);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+    const current = chosen.get(key);
+    if (!current || sub.email.length < current.email.length) chosen.set(key, sub);
+  }
+  return [...chosen.values()];
 }
 
 export async function deliverCampaign(
