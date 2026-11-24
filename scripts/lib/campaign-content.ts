@@ -86,8 +86,18 @@ function mdToHtml(md: string): string {
   );
   return `<!DOCTYPE html>
 <html>
-<body>
+<body style="margin:0;padding:0;background:#ffffff;color:#202020;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%;">
+<div style="max-width:680px;margin:0;padding:0;">
+<style>
+  .campaign-body p { margin: 0 0 16px; font-size: 16px; line-height: 1.55; }
+  .campaign-body a { overflow-wrap: anywhere; word-break: break-word; }
+  .campaign-body h2 { margin: 24px 0 8px; font-size: 16px; line-height: 1.45; font-weight: 700; }
+  .campaign-body img { display: block; max-width: 100%; height: auto; margin: 18px 0; border: 0; }
+</style>
+<div class="campaign-body">
 ${inner.trimEnd()}
+</div>
+</div>
 </body>
 </html>`;
 }

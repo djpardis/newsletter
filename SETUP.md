@@ -160,9 +160,13 @@ they confirm. The welcome email is an ordinary campaign, so it is written,
 created, and tested with the same scripts as any other campaign:
 
 ```bash
+cp examples/campaigns/_templates/welcome.md campaigns/welcome.md
 npx tsx scripts/create-campaign.ts --md campaigns/welcome.md --slug welcome
 npx tsx scripts/send-test-campaign.ts --id <campaign id> --to you@example.com
 ```
+
+Edit the copied file before creating the campaign. Replace the example
+newsletter name, browser link, and body copy with the operator-approved text.
 
 After the test email looks right, set `WELCOME_CAMPAIGN_SLUG = "welcome"` in
 `[vars]` and deploy. Confirming then queues the campaign for the new

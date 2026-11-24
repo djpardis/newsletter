@@ -47,9 +47,9 @@ describe("campaign-content", () => {
     expect(campaign.subject).toBe("Test campaign");
     expect(campaign.type).toBe("update");
     expect(campaign.kind).toBe("manual");
-    expect(campaign.html).toContain("<!DOCTYPE html>\n<html>\n<body>");
-    expect(campaign.html).not.toContain("font-family");
-    expect(campaign.html).not.toContain("style=");
+    expect(campaign.html).toContain("<!DOCTYPE html>\n<html>\n<body");
+    expect(campaign.html).toContain("max-width:680px;margin:0;padding:0;");
+    expect(campaign.html).toContain(".campaign-body img");
     expect(campaign.html).toContain('<a href="https://example.com">link</a>');
     expect(campaign.html).toContain("<em>A short tagline.</em>");
     expect(campaign.html).toContain("Example Sender<br>");
